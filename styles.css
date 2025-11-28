@@ -474,13 +474,31 @@ html {
   transform: translateY(0);
 }
 .video-presentacion {
-  text-align: center;
   padding: 60px 20px;
+  text-align: center;
 }
 
-.video-presentacion video {
-  width: 80%;
-  max-width: 800px;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+.video-presentacion h2 {
+  font-size: 32px;
+  margin-bottom: 25px;
+  color: #2f2f2f;
+  font-weight: 600;
+}
+
+.video-contenedor {
+  display: flex;
+  justify-content: center;
+}
+
+.video-contenedor video {
+  width: 60%;
+  max-width: 650px;
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+}
+
+@media (max-width: 768px) {
+  .video-contenedor video {
+    width: 95%;
+  }
 }
