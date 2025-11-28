@@ -473,3 +473,14 @@ html {
   opacity: 1;
   transform: translateY(0);
 }
+.video-presentacion {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.video-presentacion video {
+  width: 80%;
+  max-width: 800px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
