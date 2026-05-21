@@ -9,7 +9,7 @@ desktop.ini
 *.suo
 *.user
 
-# Dependencias (si en algún momento usas Node)
+# Dependencias 
 node_modules/
 npm-debug.log
 package-lock.json
