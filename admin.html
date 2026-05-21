@@ -2,33 +2,84 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Admin - Sweet Home</title>
+  <title>Actualizar Catálogo | Sweet Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="styles-admin.css">
 </head>
 <body>
 
-  <h1>Panel de Administración</h1>
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar">
+    <div class="container nav-content">
+      <div class="logo">
+        <img src="Logo1.jpg" alt="Sweet Home">
+      </div>
+      <nav>
+        <a href="index.html">Inicio</a>
+        <a href="productos.html">Productos</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+    </div>
+  </header>
 
-  <section class="form-section">
-    <h2>Agregar Producto</h2>
+  <!-- ===== MAIN ===== -->
+  <main class="admin-main">
+    <div class="admin-container">
 
-    <form id="productForm">
-      <input type="text" id="nombre" placeholder="Nombre del producto" required>
+      <div class="admin-header">
+        <div>
+          <h1>Actualizar Catálogo</h1>
+          <p class="admin-subtitle">Gestiona tu colección de productos</p>
+        </div>
+        <button class="btn-agregar" id="btnAbrirModal">+ Agregar Producto</button>
+      </div>
 
-      <textarea id="descripcion" placeholder="Descripción" required></textarea>
+      <div class="tabla-productos">
+        <div class="tabla-header">
+          <span>Producto</span>
+          <span>Categoría</span>
+          <span>Precio</span>
+          <span class="col-acciones">Acciones</span>
+        </div>
+        <div id="productList"></div>
+      </div>
 
-      <input type="number" id="precio" placeholder="Precio" required>
+    </div>
+  </main>
 
-      <input type="text" id="imagen" placeholder="URL de la imagen" required>
-  
-	  | <button type="submit" id="btnGuardar">Guardar producto</button>
-    </form>
-  </section>
-
-  <section>
-    <h2>Lista de productos</h2>
-    <div id="productList"></div>
-  </section>
+  <!-- ===== MODAL ===== -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Agregar Producto</h2>
+        <button class="btn-cerrar" id="btnCerrarModal">&times;</button>
+      </div>
+      <form id="productForm">
+        <div class="form-group">
+          <label>Nombre del producto</label>
+          <input type="text" id="nombre" placeholder="Ej: Edredón Nórdico" required>
+        </div>
+        <div class="form-group">
+          <label>Categoría</label>
+          <input type="text" id="categoria" placeholder="Ej: Edredones">
+        </div>
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea id="descripcion" placeholder="Descripción del producto" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Precio</label>
+          <input type="number" id="precio" placeholder="Ej: 155900" required>
+        </div>
+        <div class="form-group">
+          <label>URL de la imagen</label>
+          <input type="text" id="imagen" placeholder="https://...">
+        </div>
+        <button type="submit" class="btn-guardar" id="btnGuardar">Guardar producto</button>
+      </form>
+    </div>
+  </div>
 
   <script src="crud.js"></script>
 </body>

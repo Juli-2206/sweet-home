@@ -25,15 +25,13 @@ body {
 .nav-content {
   display: flex;
   align-items: center;
-  gap: 20px;
+  justify-content: space-between;
 }
 
 .nav-content nav {
   display: flex;
-  flex: 1;
-  justify-content: space-evenly;
   align-items: center;
-  flex-wrap: wrap;
+  gap: 30px;
 }
 
 .nav-content nav a {
@@ -445,22 +443,47 @@ html {
   padding-top: 15px;
 }
 
-/* Botón cerrar */
-#cerrar-carrito {
-  margin-top: 15px;
+/* Botón WhatsApp */
+.btn-whatsapp {
+  margin-top: 14px;
   width: 100%;
-  padding: 10px;
-  background: #b87a66;
+  padding: 12px;
+  background: #25d366;
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 15px;
+  font-family: Arial, sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.btn-whatsapp:hover {
+  background: #1ebe5a;
+}
+
+/* Botón cerrar */
+#cerrar-carrito {
+  margin-top: 10px;
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  color: #b87a66;
+  border: 1.5px solid #b87a66;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
   cursor: pointer;
   transition: 0.3s ease;
 }
 
 #cerrar-carrito:hover {
-  background: #9f6655;
+  background: #b87a66;
+  color: white;
 }
 
 /* ===== CONTADOR DEL CARRITO ===== */
