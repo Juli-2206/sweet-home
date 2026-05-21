@@ -29,22 +29,15 @@ body {
 }
 
 .nav-content nav a {
-  margin: 0 15px;
+  display: flex;
+  gap: 20px; /* controla el espacio entre links */
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap; /* ← clave */
   text-decoration: none;
   color: #444;
 }
 
-.nav-menu {
-  display: flex;
-  list-style: none;
-  gap: 20px;
-  align-items: center;
-}
-
-.nav-menu a {
-  text-decoration: none;
-  color: inherit;
-}
 
 .admin-link {
   display: block !important;
