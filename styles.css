@@ -34,6 +34,17 @@ body {
   color: #444;
 }
 
+.nav-menu {
+  display: flex;
+  list-style: none;
+  gap: 20px;
+  align-items: center;
+}
+
+.nav-menu a {
+  text-decoration: none;
+  color: inherit;
+}
 
 /* ===== HERO ===== */
 .logo img {

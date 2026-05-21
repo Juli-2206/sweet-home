@@ -42,3 +42,11 @@ button {
   padding: 10px;
   border-radius: 8px;
 }
+.admin-link a {
+  font-size: 0.85rem;
+  opacity: 0.6;
+}
+
+.admin-link a:hover {
+  opacity: 1;
+}
