@@ -46,6 +46,9 @@ body {
   color: inherit;
 }
 
+.admin-link {
+  display: block !important;
+}
 /* ===== HERO ===== */
 .logo img {
   width: 150px;
