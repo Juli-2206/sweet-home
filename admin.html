@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Sweet Home</title>
+  <link rel="stylesheet" href="styles-admin.css">
+</head>
+<body>
+
+  <h1>Panel de Administración</h1>
+
+  <section class="form-section">
+    <h2>Agregar Producto</h2>
+
+    <form id="productForm">
+      <input type="text" id="nombre" placeholder="Nombre del producto" required>
+
+      <textarea id="descripcion" placeholder="Descripción" required></textarea>
+
+      <input type="number" id="precio" placeholder="Precio" required>
+
+      <input type="text" id="imagen" placeholder="URL de la imagen" required>
+
+      <button type="submit">Guardar producto</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Lista de productos</h2>
+    <div id="productList"></div>
+  </section>
+
+  <script src="crud.js"></script>
+</body>
+</html>
