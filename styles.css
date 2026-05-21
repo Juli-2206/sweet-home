@@ -25,17 +25,26 @@ body {
 .nav-content {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 20px;
+}
+
+.nav-content nav {
+  display: flex;
+  flex: 1;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .nav-content nav a {
-  display: flex;
-  gap: 20px; /* controla el espacio entre links */
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap; /* ← clave */
   text-decoration: none;
   color: #444;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-content nav a:hover {
+  color: #b07d56;
 }
 .nav-menu { 
   display: flex; list-style: none; gap: 20px; align-items: center; 
