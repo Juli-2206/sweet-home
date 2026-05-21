@@ -122,6 +122,84 @@ body {
   margin-right: 10px;
 }
 
+/* Avatar inicial para reseñas de usuarios */
+.avatar-inicial {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #b87563;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+/* Formulario de reseña */
+.form-resena {
+  margin-top: 50px;
+  background: white;
+  border-radius: 14px;
+  padding: 36px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  text-align: left;
+}
+
+.form-resena h3 {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.form-resena input,
+.form-resena textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #e0dbd5;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-family: Arial, sans-serif;
+  color: #333;
+  box-sizing: border-box;
+  margin-bottom: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-resena input:focus,
+.form-resena textarea:focus {
+  outline: none;
+  border-color: #b87563;
+}
+
+.form-resena textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-resena button {
+  width: 100%;
+  padding: 12px;
+  background: #b87563;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.form-resena button:hover {
+  background: #a5664f;
+}
+
 /* ===== SUSCRIPCIÓN ===== */
 .suscripcion {
   background: #f1f1f1;

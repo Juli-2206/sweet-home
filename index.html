@@ -106,6 +106,20 @@
         </div>
 
       </div>
+
+      <!-- Reseñas de usuarios -->
+      <div class="cards" id="resenas-usuarios"></div>
+
+      <!-- Formulario nueva reseña -->
+      <div class="form-resena">
+        <h3>¿Compraste con nosotros? ¡Déjanos tu reseña!</h3>
+        <form id="formResena">
+          <input type="text" id="resena-nombre" placeholder="Tu nombre" required maxlength="50">
+          <textarea id="resena-comentario" placeholder="Cuéntanos tu experiencia..." required maxlength="300"></textarea>
+          <button type="submit">Enviar reseña</button>
+        </form>
+      </div>
+
     </div>
   </section>
 
@@ -149,5 +163,51 @@
     </div>
   </footer>
 
+<script>
+  const formResena      = document.getElementById("formResena");
+  const inputNombre     = document.getElementById("resena-nombre");
+  const inputComentario = document.getElementById("resena-comentario");
+  const contenedor      = document.getElementById("resenas-usuarios");
+
+  function crearTarjeta(resena) {
+    const iniciales = resena.nombre.trim().charAt(0).toUpperCase();
+    const card = document.createElement("div");
+    card.className = "card card-usuario";
+    card.innerHTML = `
+      <p>"${resena.comentario}"</p>
+      <div class="cliente">
+        <div class="avatar-inicial">${iniciales}</div>
+        <div>
+          <strong>${resena.nombre}</strong>
+          <span>Cliente</span>
+        </div>
+      </div>`;
+    return card;
+  }
+
+  function renderResenas() {
+    const resenas = JSON.parse(localStorage.getItem("resenas")) || [];
+    contenedor.innerHTML = "";
+    resenas.forEach(r => contenedor.appendChild(crearTarjeta(r)));
+  }
+
+  formResena.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const resenas = JSON.parse(localStorage.getItem("resenas")) || [];
+    const nueva = {
+      nombre: inputNombre.value.trim(),
+      comentario: inputComentario.value.trim()
+    };
+    resenas.push(nueva);
+    localStorage.setItem("resenas", JSON.stringify(resenas));
+    formResena.reset();
+    renderResenas();
+
+    // Scroll suave hacia la nueva reseña
+    contenedor.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  renderResenas();
+</script>
 </body>
 </html>
