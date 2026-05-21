@@ -384,16 +384,114 @@ html {
   gap: 30px;
 }
 
-/* Responsive */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 992px) {
   .grid-productos {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 768px) {
+  /* Navbar */
+  .nav-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .nav-content nav {
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 40px 20px;
+  }
+
+  .hero h1 {
+    font-size: 26px;
+  }
+
+  /* Testimonios */
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+  /* Suscripción */
+  .suscripcion-box {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  /* Footer */
+  .footer-content {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    text-align: center;
+  }
+
+  .redes {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .redes a {
+    display: inline;
+    margin: 0;
+  }
+}
+
+@media (max-width: 480px) {
   .grid-productos {
     grid-template-columns: 1fr;
+  }
+
+  /* Footer en columna única */
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .footer {
+    padding: 32px 16px;
+  }
+
+  .footer h4 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .footer p {
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+
+  .redes {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* Navbar móvil */
+  .nav-content nav {
+    gap: 12px;
+    font-size: 0.9rem;
+  }
+
+  /* Panel carrito */
+  .panel-carrito {
+    width: 100%;
+    border-radius: 0;
+  }
+
+  /* Tabla admin */
+  .tabla-header,
+  .product-row {
+    grid-template-columns: 1.5fr 0.8fr 0.8fr 60px;
+    padding: 12px 16px;
+    font-size: 0.82rem;
   }
 }
 /* ===== CARRITO ===== */
