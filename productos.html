@@ -94,9 +94,6 @@
       </a>
     </div>
 
-    <!-- Productos desde el catálogo admin -->
-    <div id="productos-admin"></div>
-
   </div>
 </section>
   <!-- ===== FOOTER ===== -->
@@ -138,10 +135,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const panel           = document.getElementById("panel-carrito");
   const btnCarrito      = document.getElementById("btnCarrito");
   const cerrar          = document.getElementById("cerrar-carrito");
-  const gridAdmin       = document.getElementById("productos-admin");
   const btnWhatsapp     = document.getElementById("btn-comprar-whatsapp");
+  const grilla          = document.querySelector(".grid-productos");
 
-  const WHATSAPP_NUMBER = "573108853644"; // número sin + ni espacios
+  const WHATSAPP_NUMBER = "573108853644";
 
   let carrito = [];
   let total = 0;
@@ -149,25 +146,25 @@ document.addEventListener("DOMContentLoaded", function () {
   // ===== CARGAR PRODUCTOS DEL ADMIN =====
   const productosAdmin = JSON.parse(localStorage.getItem("productos")) || [];
 
-  if (productosAdmin.length > 0) {
-    gridAdmin.innerHTML = productosAdmin.map(prod => {
-      const precio = Number(prod.precio);
-      const imgTag = prod.imagen
-        ? `<img src="${prod.imagen}" alt="${prod.nombre}" onerror="this.src='https://via.placeholder.com/300x200?text=Sin+imagen'">`
-        : `<div style="height:180px;background:#f0ece8;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:2rem;">🛏</div>`;
-      return `
-        <div class="producto-card">
-          ${imgTag}
-          <h3>${prod.nombre}</h3>
-          ${prod.categoria ? `<p style="font-size:0.82rem;color:#999;margin-bottom:4px">${prod.categoria}</p>` : ""}
-          <p>$${precio.toLocaleString("es-CL")}</p>
-          <a href="#" class="btn-primary agregar-carrito"
-             data-producto="${prod.nombre}" data-precio="${precio}">
-            Agregar al carrito
-          </a>
-        </div>`;
-    }).join("");
-  }
+  productosAdmin.forEach(prod => {
+    const precio = Number(prod.precio);
+    const imgTag = prod.imagen
+      ? `<img src="${prod.imagen}" alt="${prod.nombre}" onerror="this.src='https://via.placeholder.com/300x200?text=Sin+imagen'">`
+      : `<div style="height:180px;background:#f0ece8;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:2rem;">🛏</div>`;
+
+    const card = document.createElement("div");
+    card.className = "producto-card";
+    card.innerHTML = `
+      ${imgTag}
+      <h3>${prod.nombre}</h3>
+      ${prod.categoria ? `<p style="font-size:0.82rem;color:#999;margin-bottom:4px">${prod.categoria}</p>` : ""}
+      <p>$${precio.toLocaleString("es-CL")}</p>
+      <a href="#" class="btn-primary agregar-carrito"
+         data-producto="${prod.nombre}" data-precio="${precio}">
+        Agregar al carrito
+      </a>`;
+    grilla.appendChild(card);
+  });
 
   // ===== TOAST =====
   function mostrarToast(text) {
