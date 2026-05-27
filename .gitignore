@@ -9,10 +9,10 @@ desktop.ini
 *.suo
 *.user
 
-# Dependencias 
+# Dependencias
 node_modules/
 npm-debug.log
-package-lock.json
+# package-lock.json  ← habilitado para que Railway pueda hacer el build
 
 # Variables de entorno (contraseñas, claves API)
 .env
