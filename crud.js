@@ -258,6 +258,62 @@ async function cargarProductos() {
   }
 }
 
+// ===== UPLOAD IMAGEN =====
+const uploadArea      = document.getElementById("uploadArea");
+const imagenFile      = document.getElementById("imagenFile");
+const uploadPlaceholder = document.getElementById("uploadPlaceholder");
+const imagenPreview   = document.getElementById("imagenPreview");
+const uploadStatus    = document.getElementById("uploadStatus");
+
+uploadArea.addEventListener("click", () => imagenFile.click());
+
+imagenFile.addEventListener("change", async () => {
+  const file = imagenFile.files[0];
+  if (!file) return;
+
+  // Preview local inmediato
+  const reader = new FileReader();
+  reader.onload = e => {
+    imagenPreview.src = e.target.result;
+    imagenPreview.style.display = 'block';
+    uploadPlaceholder.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+
+  // Subir al backend
+  uploadStatus.textContent = 'Subiendo imagen...';
+  uploadStatus.style.color = '#999';
+
+  try {
+    const formData = new FormData();
+    formData.append('imagen', file);
+
+    const res = await fetch(`${API_URL}/productos/upload`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al subir imagen');
+
+    document.getElementById('imagen').value = data.url;
+    uploadStatus.textContent = '✓ Imagen subida correctamente';
+    uploadStatus.style.color = '#27ae60';
+  } catch(err) {
+    uploadStatus.textContent = '✗ ' + err.message;
+    uploadStatus.style.color = '#d94f4f';
+  }
+});
+
+function resetUpload() {
+  imagenFile.value = '';
+  imagenPreview.src = '';
+  imagenPreview.style.display = 'none';
+  uploadPlaceholder.style.display = 'flex';
+  uploadStatus.textContent = '';
+  document.getElementById('imagen').value = '';
+}
+
 // ===== MODAL =====
 btnAbrirModal.addEventListener("click", () => {
   editId = null;
@@ -275,6 +331,7 @@ modalOverlay.addEventListener("click", (e) => {
 function cerrarModal() {
   modalOverlay.classList.remove("active");
   form.reset();
+  resetUpload();
   editId = null;
 }
 
@@ -387,6 +444,16 @@ function abrirEditar(id) {
   document.getElementById("descripcion").value  = prod.descripcion || "";
   document.getElementById("precio").value       = prod.precio;
   document.getElementById("imagen").value       = prod.imagen_url || "";
+
+  // Mostrar imagen actual en preview
+  resetUpload();
+  if (prod.imagen_url) {
+    imagenPreview.src = prod.imagen_url;
+    imagenPreview.style.display = 'block';
+    uploadPlaceholder.style.display = 'none';
+    uploadStatus.textContent = 'Imagen actual — sube una nueva para cambiarla';
+    uploadStatus.style.color = '#999';
+  }
 
   modalOverlay.classList.add("active");
 }

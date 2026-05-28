@@ -487,6 +487,59 @@
   background: #b93c3c;
 }
 
+/* ===== UPLOAD IMAGEN ===== */
+.upload-area {
+  border: 2px dashed #d9d0c8;
+  border-radius: 10px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s;
+  background: #fdfaf8;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-area:hover {
+  border-color: #b87563;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 1.5rem;
+  color: #aaa;
+  font-family: 'Poppins', Arial, sans-serif;
+}
+
+.upload-placeholder span {
+  font-size: 0.88rem;
+  color: #777;
+  font-weight: 500;
+}
+
+.upload-placeholder small {
+  font-size: 0.78rem;
+  color: #bbb;
+}
+
+#imagenPreview {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  display: block;
+}
+
+.upload-status {
+  font-size: 0.8rem;
+  margin-top: 5px;
+  min-height: 1rem;
+  font-family: 'Poppins', Arial, sans-serif;
+}
+
 /* ===== SELECT CATEGORÍA ===== */
 .form-group select {
   width: 100%;

@@ -28,4 +28,12 @@ async function toggle(req, res, next) {
   try { res.json(await svc.toggle(req.params.id)); } catch (err) { next(err); }
 }
 
-module.exports = { listar, todos, detalle, crear, editar, toggle };
+async function uploadImagen(req, res, next) {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No se envió ningún archivo' });
+    const url = await svc.uploadImagen(req.file);
+    res.json({ url });
+  } catch(err) { next(err); }
+}
+
+module.exports = { listar, todos, detalle, crear, editar, toggle, uploadImagen };

@@ -64,4 +64,21 @@ async function toggle(id) {
   return data;
 }
 
-module.exports = { listar, todos, detalle, crear, editar, toggle };
+async function uploadImagen(file) {
+  const ext  = file.originalname.split('.').pop().toLowerCase();
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from('productos')
+    .upload(path, file.buffer, { contentType: file.mimetype, upsert: false });
+
+  if (error) throw error;
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('productos')
+    .getPublicUrl(path);
+
+  return publicUrl;
+}
+
+module.exports = { listar, todos, detalle, crear, editar, toggle, uploadImagen };
