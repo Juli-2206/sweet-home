@@ -737,7 +737,6 @@
 
 .variantes-header {
   display: grid;
-  grid-template-columns: 1.2fr 1fr 90px 80px 36px;
   gap: 6px;
   padding: 9px 12px;
   background: #f5f0ec;
@@ -749,9 +748,13 @@
   font-family: 'Poppins', Arial, sans-serif;
 }
 
+.variantes-header-3 {
+  grid-template-columns: 1.8fr 100px 80px 36px;
+}
+
 .variante-row {
   display: grid;
-  grid-template-columns: 1.2fr 1fr 90px 80px 36px;
+  grid-template-columns: 1.8fr 100px 80px 36px;
   gap: 6px;
   padding: 8px 12px;
   border-top: 1px solid #f0e8e3;
@@ -821,4 +824,96 @@
 .btn-add-variante:hover {
   background: #fdf7f5;
   border-color: #b87563;
+}
+
+/* ===== COLORES CHIPS ===== */
+.colores-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 10px;
+  min-height: 10px;
+}
+
+.color-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f0e8e4;
+  border: 1.5px solid #d4bfb8;
+  border-radius: 20px;
+  padding: 4px 10px 4px 12px;
+  font-size: 0.82rem;
+  color: #5c4a42;
+  font-family: 'Poppins', Arial, sans-serif;
+}
+
+.chip-del {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #b87563;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.chip-del:hover { color: #d94f4f; }
+
+.color-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.input-nuevo-color {
+  flex: 1;
+  border: 1px solid #e0d5cf;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-family: 'Poppins', Arial, sans-serif;
+  color: #3a2e2a;
+}
+
+.input-nuevo-color:focus {
+  outline: none;
+  border-color: #b87563;
+  box-shadow: 0 0 0 2px rgba(184,117,99,0.12);
+}
+
+.btn-add-color {
+  background: #b87563;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.btn-add-color:hover { background: #a5664f; }
+
+/* ===== ELIMINAR PERMANENTE ===== */
+.btn-delete-hard {
+  background: none;
+  border: 1.5px solid #e8c4c4;
+  border-radius: 8px;
+  color: #d94f4f;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-delete-hard:hover {
+  background: #fdf0f0;
+  border-color: #d94f4f;
 }

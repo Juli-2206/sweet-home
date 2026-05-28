@@ -108,8 +108,8 @@
           <textarea id="descripcion" placeholder="Descripción del producto" required></textarea>
         </div>
         <div class="form-group">
-          <label>Precio</label>
-          <input type="number" id="precio" placeholder="Ej: 155900" required>
+          <label>Precio base <small style="color:#aaa;font-weight:400" id="precioHint">(opcional si el producto tiene variantes con precio propio)</small></label>
+          <input type="number" id="precio" placeholder="Ej: 155900">
         </div>
         <div class="form-group">
           <label>Imágenes del producto <small style="color:#aaa;font-weight:400">(máx. 6)</small></label>
@@ -117,11 +117,10 @@
           <p id="uploadStatus" class="upload-status"></p>
         </div>
         <div class="form-group">
-          <label>Variantes <small style="color:#aaa;font-weight:400">(talla, color opcional, stock)</small></label>
+          <label>Variantes <small style="color:#aaa;font-weight:400">(talla/medida, precio, stock)</small></label>
           <div class="variantes-tabla" id="variantesTabla">
-            <div class="variantes-header">
+            <div class="variantes-header variantes-header-3">
               <span>Talla / Medida</span>
-              <span>Color (opc.)</span>
               <span>Precio</span>
               <span>Stock</span>
               <span></span>
@@ -129,6 +128,14 @@
             <div id="variantesRows"></div>
           </div>
           <button type="button" class="btn-add-variante" id="btnAddVariante">+ Agregar variante</button>
+        </div>
+        <div class="form-group">
+          <label>Colores disponibles <small style="color:#aaa;font-weight:400">(opcionales, independientes de la talla)</small></label>
+          <div class="colores-chips" id="coloresChips"></div>
+          <div class="color-input-row">
+            <input type="text" id="nuevoColor" placeholder="Ej: Azul cielo" class="input-nuevo-color">
+            <button type="button" class="btn-add-color" id="btnAddColor">+ Agregar</button>
+          </div>
         </div>
         <button type="submit" class="btn-guardar" id="btnGuardar">Guardar producto</button>
       </form>

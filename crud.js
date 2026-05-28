@@ -4,10 +4,38 @@ const API_URL = 'https://sweet-home-zw3h.onrender.com';
 let token    = sessionStorage.getItem('sh_token');
 let usuario  = null;
 try { usuario = JSON.parse(sessionStorage.getItem('sh_usuario')); } catch(e) {}
-let productos    = [];
-let categorias   = [];
-let editId       = null;
-let variantesData = []; // [{id?, talla, color, stock}]
+let productos     = [];
+let categorias    = [];
+let editId        = null;
+let variantesData = []; // [{id?, talla, precio, stock}]
+let coloresData   = []; // ['Azul', 'Rojo', ...]
+
+// ===== TOKEN / REFRESH =====
+let refreshToken = null;
+try { refreshToken = sessionStorage.getItem('sh_refresh'); } catch(e) {}
+
+function agendarRefresh() {
+  setTimeout(async () => {
+    if (!refreshToken) return;
+    try {
+      const res = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        token        = data.token;
+        refreshToken = data.refresh_token;
+        sessionStorage.setItem('sh_token',   token);
+        sessionStorage.setItem('sh_refresh', refreshToken);
+        agendarRefresh();
+      } else {
+        mostrarLogin();
+      }
+    } catch(err) { console.error('Error al refrescar token:', err); }
+  }, 50 * 60 * 1000); // refrescar cada 50 minutos
+}
 
 // ===== ELEMENTOS =====
 const form         = document.getElementById("productForm");
@@ -84,12 +112,15 @@ loginForm.addEventListener('submit', async (e) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Credenciales incorrectas');
 
-    token   = data.token;
-    usuario = data.usuario;
-    sessionStorage.setItem('sh_token', token);
+    token        = data.token;
+    refreshToken = data.refresh_token;
+    usuario      = data.usuario;
+    sessionStorage.setItem('sh_token',   token);
+    sessionStorage.setItem('sh_refresh', refreshToken);
     sessionStorage.setItem('sh_usuario', JSON.stringify(usuario));
 
     mostrarPanel();
+    agendarRefresh();
   } catch(err) {
     loginError.textContent = err.message;
   } finally {
@@ -101,9 +132,11 @@ loginForm.addEventListener('submit', async (e) => {
 // ===== LOGOUT =====
 btnLogout.addEventListener('click', () => {
   sessionStorage.removeItem('sh_token');
+  sessionStorage.removeItem('sh_refresh');
   sessionStorage.removeItem('sh_usuario');
-  token   = null;
-  usuario = null;
+  token        = null;
+  refreshToken = null;
+  usuario      = null;
   mostrarLogin();
 });
 
@@ -349,10 +382,9 @@ function renderVariantesRows() {
 
   container.innerHTML = variantesData.map((v, i) => `
     <div class="variante-row" data-index="${i}">
-      <input type="text"   class="v-talla"  placeholder="Ej: Queen"     value="${v.talla  || ''}"    data-i="${i}">
-      <input type="text"   class="v-color"  placeholder="Ej: Azul"      value="${v.color  || ''}"    data-i="${i}">
-      <input type="number" class="v-precio" placeholder="0" min="0"     value="${v.precio ?? ''}"    data-i="${i}">
-      <input type="number" class="v-stock"  placeholder="0" min="0"     value="${v.stock  ?? 0}"     data-i="${i}">
+      <input type="text"   class="v-talla"  placeholder="Ej: Queen"  value="${v.talla  || ''}"  data-i="${i}">
+      <input type="number" class="v-precio" placeholder="0"  min="0" value="${v.precio ?? ''}"  data-i="${i}">
+      <input type="number" class="v-stock"  placeholder="0"  min="0" value="${v.stock  ?? 0}"   data-i="${i}">
       <button type="button" class="btn-del-variante" data-i="${i}" title="Eliminar">✕</button>
     </div>
   `).join('');
@@ -360,8 +392,6 @@ function renderVariantesRows() {
   // Sync inputs → variantesData en tiempo real
   container.querySelectorAll('.v-talla').forEach(el =>
     el.addEventListener('input', e => { variantesData[+e.target.dataset.i].talla = e.target.value; }));
-  container.querySelectorAll('.v-color').forEach(el =>
-    el.addEventListener('input', e => { variantesData[+e.target.dataset.i].color = e.target.value; }));
   container.querySelectorAll('.v-precio').forEach(el =>
     el.addEventListener('input', e => { variantesData[+e.target.dataset.i].precio = parseFloat(e.target.value) || 0; }));
   container.querySelectorAll('.v-stock').forEach(el =>
@@ -408,13 +438,72 @@ async function guardarVariantes(productoId) {
   }
 }
 
+// ===== COLORES =====
+function renderColoresChips() {
+  const chips = document.getElementById('coloresChips');
+  if (!chips) return;
+  chips.innerHTML = coloresData.length === 0
+    ? `<span class="colores-vacio">Sin colores agregados</span>`
+    : coloresData.map((c, i) => `
+        <span class="color-chip">
+          ${c}
+          <button type="button" class="chip-del" data-i="${i}" title="Eliminar">×</button>
+        </span>`).join('');
+
+  chips.querySelectorAll('.chip-del').forEach(btn =>
+    btn.addEventListener('click', () => {
+      coloresData.splice(+btn.dataset.i, 1);
+      renderColoresChips();
+    })
+  );
+}
+
+document.getElementById('btnAddColor').addEventListener('click', () => {
+  const input = document.getElementById('nuevoColor');
+  const val   = input.value.trim();
+  if (!val) return;
+  if (!coloresData.includes(val)) {
+    coloresData.push(val);
+    renderColoresChips();
+  }
+  input.value = '';
+  input.focus();
+});
+
+document.getElementById('nuevoColor').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnAddColor').click(); }
+});
+
+async function cargarColores(productoId) {
+  try {
+    const res  = await fetch(`${API_URL}/productos/${productoId}/colores`);
+    const data = await res.json();
+    coloresData = data.map(c => c.color);
+  } catch(err) { coloresData = []; }
+  renderColoresChips();
+}
+
+async function guardarColores(productoId) {
+  const res = await fetch(`${API_URL}/productos/${productoId}/colores`, {
+    method: 'PUT',
+    headers: headers(),
+    body: JSON.stringify({ colores: coloresData.map(c => ({ color: c })) })
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || 'Error al guardar colores');
+  }
+}
+
 // ===== MODAL =====
 btnAbrirModal.addEventListener("click", () => {
   editId = null;
   form.reset();
   resetUpload();
   variantesData = [];
+  coloresData   = [];
   renderVariantesRows();
+  renderColoresChips();
   modalTitle.textContent  = "Agregar Producto";
   btnGuardar.textContent  = "Guardar producto";
   modalOverlay.classList.add("active");
@@ -430,7 +519,9 @@ function cerrarModal() {
   form.reset();
   resetUpload();
   variantesData = [];
+  coloresData   = [];
   renderVariantesRows();
+  renderColoresChips();
   editId = null;
 }
 
@@ -454,6 +545,11 @@ function renderProductos() {
 
   const iconToggle = `
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/>
+    </svg>`;
+
+  const iconTrash = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="3 6 5 6 21 6"/>
       <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
       <path d="M10 11v6M14 11v6"/>
@@ -484,8 +580,9 @@ function renderProductos() {
       <span class="product-category">${prod.categorias?.nombre || "—"}</span>
       <span class="product-price">${formatPrecio(prod.precio)}</span>
       <div class="product-actions">
-        <button class="btn-edit"   onclick="abrirEditar('${prod.id}')"    title="Editar">${iconEdit}</button>
-        <button class="btn-delete" onclick="toggleProducto('${prod.id}')" title="${prod.activo ? 'Desactivar' : 'Activar'}">${iconToggle}</button>
+        <button class="btn-edit"        onclick="abrirEditar('${prod.id}')"      title="Editar">${iconEdit}</button>
+        <button class="btn-delete"      onclick="toggleProducto('${prod.id}')"   title="${prod.activo ? 'Desactivar' : 'Activar'}">${iconToggle}</button>
+        <button class="btn-delete-hard" onclick="eliminarProducto('${prod.id}')" title="Eliminar permanentemente">${iconTrash}</button>
       </div>
     </div>
   `).join("");
@@ -495,17 +592,24 @@ function renderProductos() {
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  const precioBase = parseFloat(document.getElementById("precio").value) || 0;
+  const tieneVariantes = variantesData.some(v => String(v.talla || '').trim());
+
   const payload = {
     nombre:       document.getElementById("nombre").value.trim(),
     descripcion:  document.getElementById("descripcion").value.trim(),
-    precio:       parseFloat(document.getElementById("precio").value),
+    precio:       precioBase,
     imagen_url:   imagenesUrls[0] || null,
     imagenes:     imagenesUrls,
     categoria_id: document.getElementById("categoria_id").value || null,
   };
 
-  if (!payload.nombre || !payload.descripcion || !payload.precio) {
-    alert("Nombre, descripción y precio son obligatorios.");
+  if (!payload.nombre || !payload.descripcion) {
+    alert("Nombre y descripción son obligatorios.");
+    return;
+  }
+  if (!tieneVariantes && !precioBase) {
+    alert("Ingresa un precio base o agrega al menos una variante con precio.");
     return;
   }
 
@@ -520,8 +624,9 @@ form.addEventListener("submit", async (e) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error al guardar');
 
-    // Guardar variantes con el ID del producto guardado
+    // Guardar variantes y colores
     await guardarVariantes(data.id);
+    await guardarColores(data.id);
 
     cerrarModal();
     await cargarProductos();
@@ -532,6 +637,26 @@ form.addEventListener("submit", async (e) => {
     btnGuardar.textContent = editId ? "Actualizar producto" : "Guardar producto";
   }
 });
+
+// ===== ELIMINAR PERMANENTE =====
+async function eliminarProducto(id) {
+  const prod = productos.find(p => p.id === id);
+  const ok   = await confirmar(
+    `¿Eliminar "${prod?.nombre}" PERMANENTEMENTE?\n\nEsto borrará el producto, sus variantes y colores. Esta acción no se puede deshacer.`,
+    'Eliminar definitivamente'
+  );
+  if (!ok) return;
+  try {
+    const res = await fetch(`${API_URL}/productos/${id}`, {
+      method: 'DELETE',
+      headers: headers()
+    });
+    if (!res.ok) throw new Error('Error al eliminar');
+    await cargarProductos();
+  } catch(err) {
+    alert(err.message);
+  }
+}
 
 // ===== EDITAR =====
 function abrirEditar(id) {
@@ -551,8 +676,9 @@ function abrirEditar(id) {
   imagenesUrls = prod.imagenes?.length ? [...prod.imagenes] : (prod.imagen_url ? [prod.imagen_url] : []);
   renderImagenesGrid();
 
-  // Cargar variantes existentes
+  // Cargar variantes y colores existentes
   cargarVariantes(id);
+  cargarColores(id);
 
   modalOverlay.classList.add("active");
 }
@@ -578,6 +704,7 @@ async function toggleProducto(id) {
 // ===== ARRANQUE =====
 if (token && usuario) {
   mostrarPanel();
+  if (refreshToken) agendarRefresh();
 } else {
   mostrarLogin();
 }

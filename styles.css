@@ -1027,3 +1027,13 @@ html {
   margin: 6px 0 8px;
   font-family: 'Poppins', Arial, sans-serif;
 }
+
+.modal-colores {
+  margin: 14px 0 6px;
+}
+
+.colores-vacio {
+  font-size: 0.8rem;
+  color: #c0b0a8;
+  font-style: italic;
+}

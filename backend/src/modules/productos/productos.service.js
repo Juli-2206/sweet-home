@@ -81,6 +81,42 @@ async function uploadImagen(file) {
   return publicUrl;
 }
 
+// ===== ELIMINAR (hard delete) =====
+async function eliminar(id) {
+  const { error } = await supabase.from('productos').delete().eq('id', id);
+  if (error) throw error;
+  return { mensaje: 'Producto eliminado permanentemente' };
+}
+
+// ===== COLORES =====
+async function listarColores(productoId) {
+  const { data, error } = await supabase
+    .from('colores_producto')
+    .select('*')
+    .eq('producto_id', productoId)
+    .order('color');
+  if (error) throw error;
+  return data;
+}
+
+async function bulkColores(productoId, colores) {
+  const { error: delError } = await supabase
+    .from('colores_producto').delete().eq('producto_id', productoId);
+  if (delError) throw delError;
+
+  if (!colores || colores.length === 0) return [];
+
+  const rows = colores
+    .map(c => ({ producto_id: productoId, color: String(c.color || c).trim() }))
+    .filter(r => r.color);
+
+  if (rows.length === 0) return [];
+
+  const { data, error } = await supabase.from('colores_producto').insert(rows).select();
+  if (error) throw error;
+  return data;
+}
+
 // ===== VARIANTES =====
 async function listarVariantes(productoId) {
   const { data, error } = await supabase
@@ -120,4 +156,4 @@ async function bulkVariantes(productoId, variantes) {
   return data;
 }
 
-module.exports = { listar, todos, detalle, crear, editar, toggle, uploadImagen, listarVariantes, bulkVariantes };
+module.exports = { listar, todos, detalle, crear, editar, toggle, eliminar, uploadImagen, listarVariantes, bulkVariantes, listarColores, bulkColores };

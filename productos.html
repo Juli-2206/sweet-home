@@ -94,14 +94,19 @@
       <p class="modal-precio" id="modalPrecio"></p>
       <p class="modal-descripcion" id="modalDescripcion"></p>
 
-      <!-- Selector de variante -->
+      <!-- Selector de talla/medida -->
       <div class="modal-variantes" id="modalVariantes" style="display:none">
-        <p class="variantes-titulo">Selecciona talla / medida *</p>
+        <p class="variantes-titulo">Talla / Medida *</p>
         <div class="variantes-btns" id="variantesBtns"></div>
         <p class="variante-stock-info" id="varianteStockInfo"></p>
       </div>
+      <!-- Selector de color -->
+      <div class="modal-colores" id="modalColores" style="display:none">
+        <p class="variantes-titulo">Color *</p>
+        <div class="variantes-btns" id="coloresBtns"></div>
+      </div>
       <p class="variantes-aviso" id="variantesAviso" style="display:none">
-        ⚠ Debes seleccionar una opción antes de agregar al carrito
+        ⚠ Debes seleccionar todas las opciones antes de agregar al carrito
       </p>
 
       <button class="btn-primary" id="btnModalCarrito" data-producto="" data-precio="">
@@ -245,66 +250,95 @@ document.addEventListener("DOMContentLoaded", function () {
     btnModalCarrito.disabled           = false;
     document.getElementById('variantesAviso').style.display = 'none';
 
-    // Reset variantes
-    const variantesContainer = document.getElementById('modalVariantes');
-    variantesContainer.style.display = 'none';
-    document.getElementById('variantesBtns').innerHTML = '';
-    document.getElementById('varianteStockInfo').textContent = '';
+    // Reset selectors
+    document.getElementById('modalVariantes').style.display = 'none';
+    document.getElementById('modalColores').style.display   = 'none';
+    document.getElementById('variantesBtns').innerHTML      = '';
+    document.getElementById('coloresBtns').innerHTML        = '';
+    document.getElementById('varianteStockInfo').textContent= '';
 
     renderGaleria();
     modalProducto.classList.add('activo');
     document.body.style.overflow = 'hidden';
+
+    // Estado de selección para validar antes del carrito
+    let varianteSeleccionada = null; // objeto variante
+    let colorSeleccionado    = null; // string color
+    let hayVariantes         = false;
+    let hayColores           = false;
+
+    function actualizarBotonCarrito() {
+      const faltaVariante = hayVariantes && !varianteSeleccionada;
+      const faltaColor    = hayColores   && !colorSeleccionado;
+      btnModalCarrito.disabled = faltaVariante || faltaColor;
+      if (!faltaVariante && !faltaColor) {
+        // Construir nombre del carrito
+        let nombre = prod.nombre;
+        if (varianteSeleccionada) nombre += ` (${varianteSeleccionada.talla})`;
+        if (colorSeleccionado)    nombre += ` - ${colorSeleccionado}`;
+        const precio = varianteSeleccionada ? varianteSeleccionada.precio : prod.precio;
+        btnModalCarrito.dataset.producto = nombre;
+        btnModalCarrito.dataset.precio   = precio;
+        document.getElementById('modalPrecio').textContent = '$' + Number(precio).toLocaleString('es-CL');
+        document.getElementById('variantesAviso').style.display = 'none';
+      }
+    }
 
     // Cargar variantes
     try {
       const res = await fetch(`${API_URL}/productos/${prod.id}/variantes`);
       const variantes = await res.json();
       if (variantes && variantes.length > 0) {
-        variantesContainer.style.display = 'block';
+        hayVariantes = true;
         btnModalCarrito.disabled = true;
-        renderVariantesBtns(variantes, prod);
+        document.getElementById('modalVariantes').style.display = 'block';
+
+        const btns      = document.getElementById('variantesBtns');
+        const stockInfo = document.getElementById('varianteStockInfo');
+
+        btns.innerHTML = variantes.map((v, i) => {
+          const sinStock = v.stock <= 0;
+          return `<button type="button" class="btn-variante${sinStock ? ' sin-stock' : ''}"
+                    data-index="${i}" ${sinStock ? 'disabled' : ''}>${v.talla}</button>`;
+        }).join('');
+
+        btns.querySelectorAll('.btn-variante:not([disabled])').forEach(btn => {
+          btn.addEventListener('click', () => {
+            btns.querySelectorAll('.btn-variante').forEach(b => b.classList.remove('activo'));
+            btn.classList.add('activo');
+            varianteSeleccionada = variantes[+btn.dataset.index];
+            stockInfo.textContent = `Disponible: ${varianteSeleccionada.stock} unidad${varianteSeleccionada.stock !== 1 ? 'es' : ''}`;
+            stockInfo.className   = 'variante-stock-info disponible';
+            actualizarBotonCarrito();
+          });
+        });
       }
-    } catch(err) {
-      console.error('Error cargando variantes:', err);
-    }
-  }
+    } catch(err) { console.error('Error cargando variantes:', err); }
 
-  function renderVariantesBtns(variantes, prod) {
-    const btns      = document.getElementById('variantesBtns');
-    const stockInfo = document.getElementById('varianteStockInfo');
+    // Cargar colores
+    try {
+      const res = await fetch(`${API_URL}/productos/${prod.id}/colores`);
+      const colores = await res.json();
+      if (colores && colores.length > 0) {
+        hayColores = true;
+        btnModalCarrito.disabled = true;
+        document.getElementById('modalColores').style.display = 'block';
 
-    btns.innerHTML = variantes.map((v, i) => {
-      const label    = v.color ? `${v.talla} / ${v.color}` : v.talla;
-      const sinStock = v.stock <= 0;
-      return `<button type="button" class="btn-variante${sinStock ? ' sin-stock' : ''}"
-                data-index="${i}" ${sinStock ? 'disabled' : ''}>${label}</button>`;
-    }).join('');
+        const btns = document.getElementById('coloresBtns');
+        btns.innerHTML = colores.map((c, i) =>
+          `<button type="button" class="btn-variante" data-color="${c.color}">${c.color}</button>`
+        ).join('');
 
-    stockInfo.textContent = '';
-
-    btns.querySelectorAll('.btn-variante:not([disabled])').forEach(btn => {
-      btn.addEventListener('click', () => {
-        btns.querySelectorAll('.btn-variante').forEach(b => b.classList.remove('activo'));
-        btn.classList.add('activo');
-
-        const v      = variantes[+btn.dataset.index];
-        const precio = v.precio || prod.precio;
-
-        // Actualizar precio mostrado
-        document.getElementById('modalPrecio').textContent = '$' + Number(precio).toLocaleString('es-CL');
-
-        stockInfo.textContent = `Disponible: ${v.stock} unidad${v.stock !== 1 ? 'es' : ''}`;
-        stockInfo.className   = 'variante-stock-info disponible';
-
-        // Habilitar botón con datos de la variante
-        const sufijo = v.color ? ` (${v.talla} / ${v.color})` : ` (${v.talla})`;
-        btnModalCarrito.dataset.producto   = prod.nombre + sufijo;
-        btnModalCarrito.dataset.precio     = precio;
-        btnModalCarrito.dataset.varianteId = v.id;
-        btnModalCarrito.disabled           = false;
-        document.getElementById('variantesAviso').style.display = 'none';
-      });
-    });
+        btns.querySelectorAll('.btn-variante').forEach(btn => {
+          btn.addEventListener('click', () => {
+            btns.querySelectorAll('.btn-variante').forEach(b => b.classList.remove('activo'));
+            btn.classList.add('activo');
+            colorSeleccionado = btn.dataset.color;
+            actualizarBotonCarrito();
+          });
+        });
+      }
+    } catch(err) { console.error('Error cargando colores:', err); }
   }
 
   function renderGaleria() {

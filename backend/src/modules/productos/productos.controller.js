@@ -36,6 +36,21 @@ async function uploadImagen(req, res, next) {
   } catch(err) { next(err); }
 }
 
+async function eliminar(req, res, next) {
+  try { res.json(await svc.eliminar(req.params.id)); } catch(err) { next(err); }
+}
+
+async function listarColores(req, res, next) {
+  try { res.json(await svc.listarColores(req.params.id)); } catch(err) { next(err); }
+}
+
+async function bulkColores(req, res, next) {
+  try {
+    const { colores } = req.body;
+    res.json(await svc.bulkColores(req.params.id, colores || []));
+  } catch(err) { next(err); }
+}
+
 async function listarVariantes(req, res, next) {
   try { res.json(await svc.listarVariantes(req.params.id)); } catch(err) { next(err); }
 }
@@ -47,4 +62,4 @@ async function bulkVariantes(req, res, next) {
   } catch(err) { next(err); }
 }
 
-module.exports = { listar, todos, detalle, crear, editar, toggle, uploadImagen, listarVariantes, bulkVariantes };
+module.exports = { listar, todos, detalle, crear, editar, toggle, eliminar, uploadImagen, listarVariantes, bulkVariantes, listarColores, bulkColores };
