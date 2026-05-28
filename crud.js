@@ -23,6 +23,10 @@ const btnLogout      = document.getElementById("btnLogout");
 const usuarioNombre  = document.getElementById("usuarioNombre");
 const adminMain      = document.getElementById("adminMain");
 const btnLoginSubmit = document.getElementById("btnLoginSubmit");
+const btnNuevaCat    = document.getElementById("btnNuevaCat");
+const nuevaCatForm   = document.getElementById("nuevaCatForm");
+const btnGuardarCat  = document.getElementById("btnGuardarCat");
+const btnCancelarCat = document.getElementById("btnCancelarCat");
 
 // ===== HEADERS AUTENTICADOS =====
 function headers() {
@@ -97,15 +101,67 @@ async function cargarCategorias() {
   try {
     const res = await fetch(`${API_URL}/categorias`);
     categorias = await res.json();
-    const select = document.getElementById('categoria_id');
-    select.innerHTML = '<option value="">Sin categoría</option>';
-    categorias.forEach(cat => {
-      select.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`;
-    });
+    poblarSelectCategorias();
   } catch(err) {
     console.error('Error cargando categorías:', err);
   }
 }
+
+function poblarSelectCategorias() {
+  const select = document.getElementById('categoria_id');
+  const valorActual = select.value;
+  select.innerHTML = '<option value="">Sin categoría</option>';
+  categorias.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat.id;
+    opt.textContent = cat.nombre;
+    select.appendChild(opt);
+  });
+  if (valorActual) select.value = valorActual;
+}
+
+// ===== NUEVA CATEGORÍA =====
+btnNuevaCat.addEventListener('click', () => {
+  nuevaCatForm.classList.toggle('visible');
+  if (nuevaCatForm.classList.contains('visible')) {
+    document.getElementById('nuevaCatNombre').focus();
+  }
+});
+
+btnCancelarCat.addEventListener('click', () => {
+  nuevaCatForm.classList.remove('visible');
+  document.getElementById('nuevaCatNombre').value = '';
+});
+
+btnGuardarCat.addEventListener('click', async () => {
+  const nombre = document.getElementById('nuevaCatNombre').value.trim();
+  if (!nombre) return;
+
+  try {
+    btnGuardarCat.disabled = true;
+    btnGuardarCat.textContent = '...';
+
+    const res = await fetch(`${API_URL}/categorias`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({ nombre })
+    });
+    const cat = await res.json();
+    if (!res.ok) throw new Error(cat.error || 'Error al crear categoría');
+
+    categorias.push(cat);
+    poblarSelectCategorias();
+    document.getElementById('categoria_id').value = cat.id;
+
+    nuevaCatForm.classList.remove('visible');
+    document.getElementById('nuevaCatNombre').value = '';
+  } catch(err) {
+    alert(err.message);
+  } finally {
+    btnGuardarCat.disabled = false;
+    btnGuardarCat.textContent = 'Agregar';
+  }
+});
 
 // ===== CARGAR PRODUCTOS =====
 async function cargarProductos() {
