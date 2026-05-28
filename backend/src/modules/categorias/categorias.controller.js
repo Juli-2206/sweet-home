@@ -20,4 +20,13 @@ async function toggle(req, res, next) {
   try { res.json(await svc.toggle(req.params.id)); } catch (err) { next(err); }
 }
 
-module.exports = { listar, todas, crear, editar, toggle };
+async function eliminar(req, res, next) {
+  try {
+    res.json(await svc.eliminar(req.params.id));
+  } catch(err) {
+    if (err.status === 400) return res.status(400).json({ error: err.message });
+    next(err);
+  }
+}
+
+module.exports = { listar, todas, crear, editar, toggle, eliminar };

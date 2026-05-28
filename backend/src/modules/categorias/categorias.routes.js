@@ -8,5 +8,6 @@ router.get('/todas',  auth, roles('admin'), ctrl.todas); // Admin: todas
 router.post('/',      auth, roles('admin'), ctrl.crear);
 router.put('/:id',    auth, roles('admin'), ctrl.editar);
 router.patch('/:id/toggle', auth, roles('admin'), ctrl.toggle);
+router.delete('/:id',       auth, roles('admin'), ctrl.eliminar);
 
 module.exports = router;

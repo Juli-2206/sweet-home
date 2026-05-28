@@ -23,10 +23,12 @@ const btnLogout      = document.getElementById("btnLogout");
 const usuarioNombre  = document.getElementById("usuarioNombre");
 const adminMain      = document.getElementById("adminMain");
 const btnLoginSubmit = document.getElementById("btnLoginSubmit");
-const btnNuevaCat    = document.getElementById("btnNuevaCat");
-const nuevaCatForm   = document.getElementById("nuevaCatForm");
-const btnGuardarCat  = document.getElementById("btnGuardarCat");
-const btnCancelarCat = document.getElementById("btnCancelarCat");
+const btnNuevaCat      = document.getElementById("btnNuevaCat");
+const nuevaCatForm     = document.getElementById("nuevaCatForm");
+const btnGuardarCat    = document.getElementById("btnGuardarCat");
+const btnCancelarCat   = document.getElementById("btnCancelarCat");
+const btnGestionarCats = document.getElementById("btnGestionarCats");
+const listaCategorias  = document.getElementById("listaCategorias");
 
 // ===== HEADERS AUTENTICADOS =====
 function headers() {
@@ -150,9 +152,10 @@ btnGuardarCat.addEventListener('click', async () => {
 
     categorias.push(cat);
     poblarSelectCategorias();
+    renderListaCategorias();
     document.getElementById('categoria_id').value = cat.id;
 
-    nuevaCatForm.classList.remove('visible');
+    nuevaCatForm.style.display = 'none';
     document.getElementById('nuevaCatNombre').value = '';
   } catch(err) {
     alert(err.message);
@@ -161,6 +164,58 @@ btnGuardarCat.addEventListener('click', async () => {
     btnGuardarCat.textContent = 'Agregar';
   }
 });
+
+// ===== GESTIONAR CATEGORÍAS =====
+btnGestionarCats.addEventListener('click', () => {
+  const visible = listaCategorias.style.display === 'block';
+  listaCategorias.style.display = visible ? 'none' : 'block';
+  btnGestionarCats.textContent  = visible ? 'Gestionar categorías' : 'Cerrar gestión';
+  if (!visible) renderListaCategorias();
+});
+
+function renderListaCategorias() {
+  if (categorias.length === 0) {
+    listaCategorias.innerHTML = `<p class="cats-vacio">No hay categorías aún.</p>`;
+    return;
+  }
+  listaCategorias.innerHTML = categorias.map(cat => `
+    <div class="cat-item">
+      <span>${cat.nombre}</span>
+      <button type="button" class="btn-eliminar-cat" data-id="${cat.id}" title="Eliminar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6M14 11v6"/>
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+      </button>
+    </div>
+  `).join('');
+
+  listaCategorias.querySelectorAll('.btn-eliminar-cat').forEach(btn => {
+    btn.addEventListener('click', () => eliminarCategoria(btn.dataset.id));
+  });
+}
+
+async function eliminarCategoria(id) {
+  const cat = categorias.find(c => c.id == id);
+  if (!confirm(`¿Eliminar la categoría "${cat?.nombre}"?`)) return;
+
+  try {
+    const res = await fetch(`${API_URL}/categorias/${id}`, {
+      method: 'DELETE',
+      headers: headers()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    categorias = categorias.filter(c => c.id != id);
+    poblarSelectCategorias();
+    renderListaCategorias();
+  } catch(err) {
+    alert(err.message);
+  }
+}
 
 // ===== CARGAR PRODUCTOS =====
 async function cargarProductos() {

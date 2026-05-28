@@ -37,4 +37,23 @@ async function toggle(id) {
   return data;
 }
 
-module.exports = { listarActivas, listarTodas, crear, editar, toggle };
+async function eliminar(id) {
+  // Verificar que no tenga productos asociados
+  const { data: prods } = await supabase
+    .from('productos')
+    .select('id')
+    .eq('categoria_id', id)
+    .limit(1);
+
+  if (prods && prods.length > 0) {
+    const err = new Error('No se puede eliminar: la categoría tiene productos asociados');
+    err.status = 400;
+    throw err;
+  }
+
+  const { error } = await supabase.from('categorias').delete().eq('id', id);
+  if (error) throw error;
+  return { mensaje: 'Categoría eliminada' };
+}
+
+module.exports = { listarActivas, listarTodas, crear, editar, toggle, eliminar };
