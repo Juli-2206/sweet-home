@@ -122,14 +122,13 @@ function poblarSelectCategorias() {
 
 // ===== NUEVA CATEGORÍA =====
 btnNuevaCat.addEventListener('click', () => {
-  nuevaCatForm.classList.toggle('visible');
-  if (nuevaCatForm.classList.contains('visible')) {
-    document.getElementById('nuevaCatNombre').focus();
-  }
+  const visible = nuevaCatForm.style.display === 'flex';
+  nuevaCatForm.style.display = visible ? 'none' : 'flex';
+  if (!visible) document.getElementById('nuevaCatNombre').focus();
 });
 
 btnCancelarCat.addEventListener('click', () => {
-  nuevaCatForm.classList.remove('visible');
+  nuevaCatForm.style.display = 'none';
   document.getElementById('nuevaCatNombre').value = '';
 });
 
