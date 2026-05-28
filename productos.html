@@ -407,17 +407,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const card = document.createElement("div");
         card.className = "producto-card";
-        card.dataset.id = prod.id;
+        card.dataset.id = String(prod.id);
         card.style.cursor = 'pointer';
         card.innerHTML = `
           ${imgTag}
           <h3>${prod.nombre}</h3>
           ${prod.categorias ? `<p style="font-size:0.82rem;color:#999;margin-bottom:4px">${prod.categorias.nombre}</p>` : ""}
-          <p>$${precio.toLocaleString("es-CL")}</p>
-          <a href="#" class="btn-primary agregar-carrito"
-             data-producto="${prod.nombre}" data-precio="${precio}">
-            Agregar al carrito
-          </a>`;
+          <p class="card-precio">$${precio.toLocaleString("es-CL")}</p>
+          <button type="button" class="btn-primary btn-ver-producto">Ver producto</button>`;
         grilla.appendChild(card);
       });
     } catch (err) {
@@ -425,12 +422,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   };
 
-  // Delegación: clic en card abre modal, clic en botón carrito no
+  // Cualquier clic en la card (incluido el botón) abre el modal
   grilla.addEventListener('click', e => {
-    if (e.target.closest('.agregar-carrito')) return;
     const card = e.target.closest('.producto-card');
     if (!card) return;
-    const prod = productosData.find(p => p.id === card.dataset.id);
+    const prod = productosData.find(p => String(p.id) === card.dataset.id);
     if (prod) abrirModalProducto(prod);
   });
 
@@ -482,9 +478,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // ===== BOTÓN CARRITO DEL MODAL =====
   btnModalCarrito.addEventListener('click', function(e) {
     e.preventDefault();
-    // Verificar si hay variantes disponibles y ninguna seleccionada
-    const variantesContainer = document.getElementById('modalVariantes');
-    if (variantesContainer.style.display !== 'none' && !this.dataset.varianteId) {
+    if (this.disabled) {
       document.getElementById('variantesAviso').style.display = 'block';
       return;
     }
@@ -493,25 +487,11 @@ document.addEventListener("DOMContentLoaded", function () {
     carrito.push({ nombre, precio });
     total += precio;
     actualizarCarrito();
-    mostrarToast(`${nombre} agregado al carrito 🛒`);
+    mostrarToast(`¡Agregado al carrito!`);
     if (panel) panel.classList.add('activo');
   });
 
-  // ===== EVENT DELEGATION para "Agregar al carrito" (tarjetas) =====
-  document.body.addEventListener("click", function (e) {
-    const boton = e.target.closest(".agregar-carrito");
-    if (!boton || boton.id === 'btnModalCarrito') return;
-    e.preventDefault();
-
-    const nombre   = boton.dataset.producto || "Producto";
-    const precio   = parseFloat(boton.dataset.precio) || 0;
-
-    carrito.push({ nombre, precio });
-    total += precio;
-    actualizarCarrito();
-    mostrarToast(`${nombre} agregado al carrito 🛒`);
-    if (panel) panel.classList.add("activo");
-  });
+  // (Los productos solo se agregan al carrito desde el modal)
 
   // ===== ABRIR/CERRAR PANEL =====
   if (btnCarrito) btnCarrito.addEventListener("click", e => { e.preventDefault(); panel.classList.toggle("activo"); });
