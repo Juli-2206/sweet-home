@@ -67,8 +67,9 @@ const btnConfirmCancelar= document.getElementById("btnConfirmCancelar");
 
 function confirmar(mensaje, textoBoton = 'Eliminar') {
   return new Promise(resolve => {
-    confirmMensaje.textContent    = mensaje;
-    btnConfirmAceptar.textContent = textoBoton;
+    confirmMensaje.textContent       = mensaje;
+    btnConfirmAceptar.textContent    = textoBoton;
+    btnConfirmCancelar.style.display = '';
     modalConfirm.classList.add("active");
 
     const aceptar = () => { cleanup(); resolve(true);  };
@@ -82,6 +83,23 @@ function confirmar(mensaje, textoBoton = 'Eliminar') {
 
     btnConfirmAceptar.addEventListener('click', aceptar);
     btnConfirmCancelar.addEventListener('click', cancelar);
+  });
+}
+
+function alertar(mensaje) {
+  return new Promise(resolve => {
+    confirmMensaje.textContent       = mensaje;
+    btnConfirmAceptar.textContent    = 'Aceptar';
+    btnConfirmCancelar.style.display = 'none';
+    modalConfirm.classList.add("active");
+
+    const cerrar = () => {
+      btnConfirmCancelar.style.display = '';
+      modalConfirm.classList.remove("active");
+      btnConfirmAceptar.removeEventListener('click', cerrar);
+      resolve();
+    };
+    btnConfirmAceptar.addEventListener('click', cerrar);
   });
 }
 
@@ -218,7 +236,7 @@ btnGuardarCat.addEventListener('click', async () => {
     nuevaCatForm.style.display = 'none';
     document.getElementById('nuevaCatNombre').value = '';
   } catch(err) {
-    alert(err.message);
+    await alertar(err.message);
   } finally {
     btnGuardarCat.disabled = false;
     btnGuardarCat.textContent = 'Agregar';
@@ -273,7 +291,7 @@ async function eliminarCategoria(id) {
     poblarSelectCategorias();
     renderListaCategorias();
   } catch(err) {
-    alert(err.message);
+    await alertar(err.message);
   }
 }
 
@@ -605,11 +623,11 @@ form.addEventListener("submit", async (e) => {
   };
 
   if (!payload.nombre || !payload.descripcion) {
-    alert("Nombre y descripción son obligatorios.");
+    await alertar("Nombre y descripción son obligatorios.");
     return;
   }
   if (!tieneVariantes && !precioBase) {
-    alert("Ingresa un precio base o agrega al menos una variante con precio.");
+    await alertar("Ingresa un precio base o agrega al menos una variante con precio.");
     return;
   }
 
@@ -631,7 +649,7 @@ form.addEventListener("submit", async (e) => {
     cerrarModal();
     await cargarProductos();
   } catch(err) {
-    alert(err.message);
+    await alertar(err.message);
   } finally {
     btnGuardar.disabled    = false;
     btnGuardar.textContent = editId ? "Actualizar producto" : "Guardar producto";
@@ -654,7 +672,7 @@ async function eliminarProducto(id) {
     if (!res.ok) throw new Error('Error al eliminar');
     await cargarProductos();
   } catch(err) {
-    alert(err.message);
+    await alertar(err.message);
   }
 }
 
@@ -697,7 +715,7 @@ async function toggleProducto(id) {
     if (!res.ok) throw new Error('Error al cambiar estado');
     await cargarProductos();
   } catch(err) {
-    alert(err.message);
+    await alertar(err.message);
   }
 }
 

@@ -15,9 +15,8 @@ async function detalle(req, res, next) {
 }
 async function crear(req, res, next) {
   try {
-    const { nombre, precio } = req.body;
-    if (!nombre || !precio)
-      return res.status(400).json({ error: 'Nombre y precio son requeridos' });
+    const { nombre } = req.body;
+    if (!nombre) return res.status(400).json({ error: 'El nombre del producto es requerido' });
     res.status(201).json(await svc.crear(req.body));
   } catch (err) { next(err); }
 }
