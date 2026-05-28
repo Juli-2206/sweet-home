@@ -1,8 +1,8 @@
 function errorHandler(err, req, res, next) {
-  console.error(`[ERROR] ${req.method} ${req.path}:`, err.message);
+  const status  = err.status || err.statusCode || 500;
+  const message = err.message || 'Error interno del servidor';
 
-  const status = err.status || 500;
-  const message = err.expose ? err.message : 'Error interno del servidor';
+  console.error(`[ERROR] ${req.method} ${req.path} (${status}):`, message);
 
   res.status(status).json({ error: message });
 }
