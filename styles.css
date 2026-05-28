@@ -383,6 +383,42 @@ html {
   }
 }
 
+/* ===== FILTROS CATEGORÍA ===== */
+.filtros-categoria {
+  padding: 0 20px 28px;
+}
+
+#filtros-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn-filtro {
+  padding: 8px 20px;
+  border-radius: 24px;
+  border: 1.5px solid #d9d0c8;
+  background: white;
+  color: #555;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-filtro:hover {
+  border-color: #b87563;
+  color: #b87563;
+}
+
+.btn-filtro.activo {
+  background: #b87563;
+  border-color: #b87563;
+  color: white;
+}
+
     /* Tarjeta */
 .producto-card {
   background: #ffffff;

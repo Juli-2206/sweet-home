@@ -40,6 +40,13 @@
     <p>Descubre nuestra colección para transformar tu hogar</p>
   </section>
 
+  <!-- ===== FILTROS ===== -->
+  <div class="filtros-categoria container">
+    <div id="filtros-btns">
+      <button class="btn-filtro activo" data-id="">Todos</button>
+    </div>
+  </div>
+
   <!-- ===== GRID DE PRODUCTOS ===== -->
 <section class="productos">
   <div class="container grid-productos" id="grid-productos">
@@ -95,19 +102,56 @@ document.addEventListener("DOMContentLoaded", function () {
   let carrito = [];
   let total = 0;
 
-  // ===== CARGAR PRODUCTOS DESDE LA API =====
+  // ===== API =====
   const API_URL = 'https://sweet-home-zw3h.onrender.com';
+  const filtrosBtns = document.getElementById('filtros-btns');
+  let categoriaActiva = '';
 
+  // ===== CARGAR CATEGORÍAS =====
+  async function cargarCategorias() {
+    try {
+      const res = await fetch(`${API_URL}/categorias`);
+      const cats = await res.json();
+      cats.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-filtro';
+        btn.dataset.id = cat.id;
+        btn.textContent = cat.nombre;
+        btn.addEventListener('click', () => seleccionarFiltro(btn, cat.id));
+        filtrosBtns.appendChild(btn);
+      });
+    } catch(err) {
+      console.error('Error cargando categorías:', err);
+    }
+  }
+
+  function seleccionarFiltro(btn, id) {
+    document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('activo'));
+    btn.classList.add('activo');
+    categoriaActiva = id;
+    cargarProductos();
+  }
+
+  // Botón "Todos"
+  filtrosBtns.querySelector('[data-id=""]').addEventListener('click', function() {
+    seleccionarFiltro(this, '');
+  });
+
+  // ===== CARGAR PRODUCTOS =====
   async function cargarProductos() {
     try {
-      const res = await fetch(`${API_URL}/productos`);
+      grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">Cargando productos...</div>`;
+      const url = categoriaActiva
+        ? `${API_URL}/productos?categoria=${categoriaActiva}`
+        : `${API_URL}/productos`;
+      const res = await fetch(url);
       if (!res.ok) throw new Error('Error al cargar productos');
       const productos = await res.json();
 
       grilla.innerHTML = '';
 
       if (productos.length === 0) {
-        grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">No hay productos disponibles por el momento.</div>`;
+        grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">No hay productos en esta categoría.</div>`;
         return;
       }
 
@@ -136,6 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  cargarCategorias();
   cargarProductos();
 
   // ===== TOAST =====
