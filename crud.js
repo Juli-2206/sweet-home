@@ -658,7 +658,7 @@ form.addEventListener("submit", async (e) => {
 
 // ===== ELIMINAR PERMANENTE =====
 async function eliminarProducto(id) {
-  const prod = productos.find(p => p.id === id);
+  const prod = productos.find(p => String(p.id) === String(id));
   const ok   = await confirmar(
     `¿Eliminar "${prod?.nombre}" PERMANENTEMENTE?\n\nEsto borrará el producto, sus variantes y colores. Esta acción no se puede deshacer.`,
     'Eliminar definitivamente'
@@ -678,7 +678,7 @@ async function eliminarProducto(id) {
 
 // ===== EDITAR =====
 function abrirEditar(id) {
-  const prod = productos.find(p => p.id === id);
+  const prod = productos.find(p => String(p.id) === String(id));
   if (!prod) return;
 
   editId = id;
