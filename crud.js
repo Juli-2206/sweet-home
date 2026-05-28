@@ -258,66 +258,89 @@ async function cargarProductos() {
   }
 }
 
-// ===== UPLOAD IMAGEN =====
-const uploadArea      = document.getElementById("uploadArea");
-const imagenFile      = document.getElementById("imagenFile");
-const uploadPlaceholder = document.getElementById("uploadPlaceholder");
-const imagenPreview   = document.getElementById("imagenPreview");
-const uploadStatus    = document.getElementById("uploadStatus");
+// ===== IMÁGENES MÚLTIPLES (máx 6) =====
+const imagenesGrid = document.getElementById("imagenesGrid");
+const uploadStatus = document.getElementById("uploadStatus");
+let imagenesUrls   = [];
+const MAX_IMGS     = 6;
 
-uploadArea.addEventListener("click", () => imagenFile.click());
+function renderImagenesGrid() {
+  imagenesGrid.innerHTML = '';
 
-imagenFile.addEventListener("change", async () => {
-  const file = imagenFile.files[0];
+  imagenesUrls.forEach((url, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'img-slot filled';
+    slot.innerHTML = `
+      <img src="${url}" alt="Imagen ${i+1}">
+      <button type="button" class="img-slot-remove" data-index="${i}" title="Eliminar">✕</button>
+      ${i === 0 ? '<span class="img-principal">Principal</span>' : ''}`;
+    slot.querySelector('.img-slot-remove').addEventListener('click', (e) => {
+      e.stopPropagation();
+      imagenesUrls.splice(i, 1);
+      renderImagenesGrid();
+    });
+    imagenesGrid.appendChild(slot);
+  });
+
+  if (imagenesUrls.length < MAX_IMGS) {
+    const slot = document.createElement('div');
+    slot.className = 'img-slot empty';
+    slot.innerHTML = `
+      <input type="file" accept="image/*" style="display:none" class="slot-input">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b87563" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <span>${imagenesUrls.length === 0 ? 'Agregar imagen' : '+ Agregar'}</span>`;
+
+    const fileInput = slot.querySelector('.slot-input');
+    slot.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => handleSlotUpload(fileInput));
+    imagenesGrid.appendChild(slot);
+  }
+}
+
+async function handleSlotUpload(input) {
+  const file = input.files[0];
   if (!file) return;
 
-  // Preview local inmediato
-  const reader = new FileReader();
-  reader.onload = e => {
-    imagenPreview.src = e.target.result;
-    imagenPreview.style.display = 'block';
-    uploadPlaceholder.style.display = 'none';
-  };
-  reader.readAsDataURL(file);
-
-  // Subir al backend
   uploadStatus.textContent = 'Subiendo imagen...';
   uploadStatus.style.color = '#999';
 
   try {
     const formData = new FormData();
     formData.append('imagen', file);
-
-    const res = await fetch(`${API_URL}/productos/upload`, {
+    const res  = await fetch(`${API_URL}/productos/upload`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
       body: formData
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al subir imagen');
+    if (!res.ok) throw new Error(data.error || 'Error al subir');
 
-    document.getElementById('imagen').value = data.url;
-    uploadStatus.textContent = '✓ Imagen subida correctamente';
+    imagenesUrls.push(data.url);
+    renderImagenesGrid();
+    uploadStatus.textContent = '✓ Imagen subida';
     uploadStatus.style.color = '#27ae60';
+    setTimeout(() => uploadStatus.textContent = '', 2000);
   } catch(err) {
     uploadStatus.textContent = '✗ ' + err.message;
     uploadStatus.style.color = '#d94f4f';
   }
-});
+}
 
 function resetUpload() {
-  imagenFile.value = '';
-  imagenPreview.src = '';
-  imagenPreview.style.display = 'none';
-  uploadPlaceholder.style.display = 'flex';
+  imagenesUrls = [];
   uploadStatus.textContent = '';
-  document.getElementById('imagen').value = '';
+  renderImagenesGrid();
 }
 
 // ===== MODAL =====
 btnAbrirModal.addEventListener("click", () => {
   editId = null;
   form.reset();
+  resetUpload();
   modalTitle.textContent  = "Agregar Producto";
   btnGuardar.textContent  = "Guardar producto";
   modalOverlay.classList.add("active");
@@ -400,7 +423,8 @@ form.addEventListener("submit", async (e) => {
     nombre:       document.getElementById("nombre").value.trim(),
     descripcion:  document.getElementById("descripcion").value.trim(),
     precio:       parseFloat(document.getElementById("precio").value),
-    imagen_url:   document.getElementById("imagen").value.trim() || null,
+    imagen_url:   imagenesUrls[0] || null,
+    imagenes:     imagenesUrls,
     categoria_id: document.getElementById("categoria_id").value || null,
   };
 
@@ -445,15 +469,9 @@ function abrirEditar(id) {
   document.getElementById("precio").value       = prod.precio;
   document.getElementById("imagen").value       = prod.imagen_url || "";
 
-  // Mostrar imagen actual en preview
-  resetUpload();
-  if (prod.imagen_url) {
-    imagenPreview.src = prod.imagen_url;
-    imagenPreview.style.display = 'block';
-    uploadPlaceholder.style.display = 'none';
-    uploadStatus.textContent = 'Imagen actual — sube una nueva para cambiarla';
-    uploadStatus.style.color = '#999';
-  }
+  // Cargar imágenes existentes
+  imagenesUrls = prod.imagenes?.length ? [...prod.imagenes] : (prod.imagen_url ? [prod.imagen_url] : []);
+  renderImagenesGrid();
 
   modalOverlay.classList.add("active");
 }

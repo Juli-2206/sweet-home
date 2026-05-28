@@ -487,6 +487,77 @@
   background: #b93c3c;
 }
 
+/* ===== GRILLA IMÁGENES MÚLTIPLES ===== */
+.imagenes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.img-slot {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+}
+
+.img-slot.empty {
+  border: 2px dashed #d9d0c8;
+  background: #fdfaf8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: border-color 0.2s;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 0.78rem;
+  color: #aaa;
+}
+
+.img-slot.empty:hover { border-color: #b87563; color: #b87563; }
+
+.img-slot.filled img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.img-slot-remove {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(0,0,0,0.55);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.2s;
+}
+
+.img-slot-remove:hover { background: #d94f4f; }
+
+.img-principal {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  background: rgba(184,117,99,0.85);
+  color: white;
+  font-size: 0.68rem;
+  font-family: 'Poppins', Arial, sans-serif;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
 /* ===== UPLOAD IMAGEN ===== */
 .upload-area {
   border: 2px dashed #d9d0c8;

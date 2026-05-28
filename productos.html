@@ -74,6 +74,33 @@
     </div>
   </div>
 </footer>
+<!-- ===== MODAL DETALLE PRODUCTO ===== -->
+<div class="modal-producto-overlay" id="modalProducto">
+  <div class="modal-producto-content">
+    <button class="modal-producto-cerrar" id="modalProductoCerrar">&times;</button>
+
+    <!-- Galería -->
+    <div class="modal-galeria">
+      <button class="galeria-nav galeria-prev" id="galeriaPrev">&#8249;</button>
+      <img class="galeria-img" id="galeriaImg" src="" alt="">
+      <button class="galeria-nav galeria-next" id="galeriaNext">&#8250;</button>
+      <div class="galeria-dots" id="galeriaDots"></div>
+    </div>
+
+    <!-- Info -->
+    <div class="modal-producto-info">
+      <span class="modal-cat" id="modalCat"></span>
+      <h2 class="modal-nombre" id="modalNombre"></h2>
+      <p class="modal-precio" id="modalPrecio"></p>
+      <p class="modal-descripcion" id="modalDescripcion"></p>
+      <button class="btn-primary agregar-carrito" id="btnModalCarrito"
+              data-producto="" data-precio="">
+        Agregar al carrito
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="panel-carrito" class="panel-carrito">
   <h3>Tu Carrito</h3>
   <div id="lista-carrito"></div>
@@ -179,6 +206,127 @@ document.addEventListener("DOMContentLoaded", function () {
       grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">Error al cargar productos. Por favor recarga la página.</div>`;
     }
   }
+
+  // ===== MODAL DETALLE PRODUCTO =====
+  const modalProducto      = document.getElementById('modalProducto');
+  const modalProductoCerrar= document.getElementById('modalProductoCerrar');
+  const galeriaImg         = document.getElementById('galeriaImg');
+  const galeriaPrev        = document.getElementById('galeriaPrev');
+  const galeriaNext        = document.getElementById('galeriaNext');
+  const galeriaDots        = document.getElementById('galeriaDots');
+  const btnModalCarrito    = document.getElementById('btnModalCarrito');
+  let galeriaImagenes = [];
+  let galeriaIndex    = 0;
+
+  function abrirModalProducto(prod) {
+    galeriaImagenes = prod.imagenes?.length ? prod.imagenes
+                    : prod.imagen_url ? [prod.imagen_url] : [];
+    galeriaIndex = 0;
+
+    document.getElementById('modalCat').textContent        = prod.categorias?.nombre || '';
+    document.getElementById('modalNombre').textContent     = prod.nombre;
+    document.getElementById('modalPrecio').textContent     = '$' + Number(prod.precio).toLocaleString('es-CL');
+    document.getElementById('modalDescripcion').textContent= prod.descripcion || '';
+    btnModalCarrito.dataset.producto = prod.nombre;
+    btnModalCarrito.dataset.precio   = prod.precio;
+
+    renderGaleria();
+    modalProducto.classList.add('activo');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function renderGaleria() {
+    if (galeriaImagenes.length === 0) {
+      galeriaImg.src = 'https://via.placeholder.com/500x400?text=Sin+imagen';
+    } else {
+      galeriaImg.src = galeriaImagenes[galeriaIndex];
+    }
+
+    galeriaPrev.style.display = galeriaImagenes.length > 1 ? 'flex' : 'none';
+    galeriaNext.style.display = galeriaImagenes.length > 1 ? 'flex' : 'none';
+
+    galeriaDots.innerHTML = galeriaImagenes.map((_, i) =>
+      `<span class="galeria-dot${i === galeriaIndex ? ' activo' : ''}" data-i="${i}"></span>`
+    ).join('');
+
+    galeriaDots.querySelectorAll('.galeria-dot').forEach(dot => {
+      dot.addEventListener('click', () => { galeriaIndex = +dot.dataset.i; renderGaleria(); });
+    });
+  }
+
+  galeriaPrev.addEventListener('click', () => {
+    galeriaIndex = (galeriaIndex - 1 + galeriaImagenes.length) % galeriaImagenes.length;
+    renderGaleria();
+  });
+  galeriaNext.addEventListener('click', () => {
+    galeriaIndex = (galeriaIndex + 1) % galeriaImagenes.length;
+    renderGaleria();
+  });
+
+  function cerrarModalProducto() {
+    modalProducto.classList.remove('activo');
+    document.body.style.overflow = '';
+  }
+
+  modalProductoCerrar.addEventListener('click', cerrarModalProducto);
+  modalProducto.addEventListener('click', e => {
+    if (e.target === modalProducto) cerrarModalProducto();
+  });
+
+  // Abrir modal al hacer clic en la card (excepto el botón de carrito)
+  let productosData = [];
+  const _cargarProductosOriginal = cargarProductos;
+  cargarProductos = async function() {
+    try {
+      grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">Cargando productos...</div>`;
+      const url = categoriaActiva
+        ? `${API_URL}/productos?categoria=${categoriaActiva}`
+        : `${API_URL}/productos`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error();
+      const productos = await res.json();
+      productosData = productos;
+      grilla.innerHTML = '';
+
+      if (productos.length === 0) {
+        grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">No hay productos en esta categoría.</div>`;
+        return;
+      }
+
+      productos.forEach(prod => {
+        const precio = Number(prod.precio);
+        const imgTag = prod.imagen_url
+          ? `<img src="${prod.imagen_url}" alt="${prod.nombre}" onerror="this.src='https://via.placeholder.com/300x200?text=Sin+imagen'">`
+          : `<div style="height:180px;background:#f0ece8;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:2rem;">🛏</div>`;
+
+        const card = document.createElement("div");
+        card.className = "producto-card";
+        card.dataset.id = prod.id;
+        card.style.cursor = 'pointer';
+        card.innerHTML = `
+          ${imgTag}
+          <h3>${prod.nombre}</h3>
+          ${prod.categorias ? `<p style="font-size:0.82rem;color:#999;margin-bottom:4px">${prod.categorias.nombre}</p>` : ""}
+          <p>$${precio.toLocaleString("es-CL")}</p>
+          <a href="#" class="btn-primary agregar-carrito"
+             data-producto="${prod.nombre}" data-precio="${precio}">
+            Agregar al carrito
+          </a>`;
+        grilla.appendChild(card);
+      });
+    } catch (err) {
+      grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">Error al cargar productos.</div>`;
+    }
+  };
+
+  // Delegación: clic en card abre modal, clic en botón carrito no
+  grilla.addEventListener('click', e => {
+    if (e.target.closest('.agregar-carrito')) return;
+    const card = e.target.closest('.producto-card');
+    if (!card) return;
+    const prod = productosData.find(p => p.id === card.dataset.id);
+    if (prod) abrirModalProducto(prod);
+  });
 
   cargarCategorias();
   cargarProductos();
