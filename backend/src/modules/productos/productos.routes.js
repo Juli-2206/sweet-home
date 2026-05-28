@@ -16,9 +16,11 @@ const upload = multer({
 router.get('/',              ctrl.listar);                             // Público: activos, con filtros
 router.get('/todos', auth, roles('admin','negocios'), ctrl.todos);    // Admin/Negocios: todos
 router.get('/:id',           ctrl.detalle);                           // Público
+router.get('/:id/variantes', ctrl.listarVariantes);                   // Público: variantes de un producto
 router.post('/upload', auth, roles('admin','negocios'), upload.single('imagen'), ctrl.uploadImagen);
 router.post('/',       auth, roles('admin','negocios'), ctrl.crear);
 router.put('/:id',     auth, roles('admin','negocios'), ctrl.editar);
+router.put('/:id/variantes', auth, roles('admin','negocios'), ctrl.bulkVariantes); // Reemplaza variantes
 router.patch('/:id/toggle', auth, roles('admin','negocios'), ctrl.toggle);
 
 module.exports = router;

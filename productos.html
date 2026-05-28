@@ -93,8 +93,18 @@
       <h2 class="modal-nombre" id="modalNombre"></h2>
       <p class="modal-precio" id="modalPrecio"></p>
       <p class="modal-descripcion" id="modalDescripcion"></p>
-      <button class="btn-primary agregar-carrito" id="btnModalCarrito"
-              data-producto="" data-precio="">
+
+      <!-- Selector de variante -->
+      <div class="modal-variantes" id="modalVariantes" style="display:none">
+        <p class="variantes-titulo">Selecciona talla / medida *</p>
+        <div class="variantes-btns" id="variantesBtns"></div>
+        <p class="variante-stock-info" id="varianteStockInfo"></p>
+      </div>
+      <p class="variantes-aviso" id="variantesAviso" style="display:none">
+        ⚠ Debes seleccionar una opción antes de agregar al carrito
+      </p>
+
+      <button class="btn-primary" id="btnModalCarrito" data-producto="" data-precio="">
         Agregar al carrito
       </button>
     </div>
@@ -218,7 +228,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let galeriaImagenes = [];
   let galeriaIndex    = 0;
 
-  function abrirModalProducto(prod) {
+  async function abrirModalProducto(prod) {
     galeriaImagenes = prod.imagenes?.length ? prod.imagenes
                     : prod.imagen_url ? [prod.imagen_url] : [];
     galeriaIndex = 0;
@@ -227,12 +237,74 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('modalNombre').textContent     = prod.nombre;
     document.getElementById('modalPrecio').textContent     = '$' + Number(prod.precio).toLocaleString('es-CL');
     document.getElementById('modalDescripcion').textContent= prod.descripcion || '';
-    btnModalCarrito.dataset.producto = prod.nombre;
-    btnModalCarrito.dataset.precio   = prod.precio;
+
+    // Reset carrito button
+    btnModalCarrito.dataset.producto   = prod.nombre;
+    btnModalCarrito.dataset.precio     = prod.precio;
+    btnModalCarrito.dataset.varianteId = '';
+    btnModalCarrito.disabled           = false;
+    document.getElementById('variantesAviso').style.display = 'none';
+
+    // Reset variantes
+    const variantesContainer = document.getElementById('modalVariantes');
+    variantesContainer.style.display = 'none';
+    document.getElementById('variantesBtns').innerHTML = '';
+    document.getElementById('varianteStockInfo').textContent = '';
 
     renderGaleria();
     modalProducto.classList.add('activo');
     document.body.style.overflow = 'hidden';
+
+    // Cargar variantes
+    try {
+      const res = await fetch(`${API_URL}/productos/${prod.id}/variantes`);
+      const variantes = await res.json();
+      if (variantes && variantes.length > 0) {
+        variantesContainer.style.display = 'block';
+        btnModalCarrito.disabled = true;
+        renderVariantesBtns(variantes, prod);
+      }
+    } catch(err) {
+      console.error('Error cargando variantes:', err);
+    }
+  }
+
+  function renderVariantesBtns(variantes, prod) {
+    const btns      = document.getElementById('variantesBtns');
+    const stockInfo = document.getElementById('varianteStockInfo');
+
+    btns.innerHTML = variantes.map((v, i) => {
+      const label    = v.color ? `${v.talla} / ${v.color}` : v.talla;
+      const sinStock = v.stock <= 0;
+      return `<button type="button" class="btn-variante${sinStock ? ' sin-stock' : ''}"
+                data-index="${i}" ${sinStock ? 'disabled' : ''}>${label}</button>`;
+    }).join('');
+
+    stockInfo.textContent = '';
+
+    btns.querySelectorAll('.btn-variante:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btns.querySelectorAll('.btn-variante').forEach(b => b.classList.remove('activo'));
+        btn.classList.add('activo');
+
+        const v      = variantes[+btn.dataset.index];
+        const precio = v.precio || prod.precio;
+
+        // Actualizar precio mostrado
+        document.getElementById('modalPrecio').textContent = '$' + Number(precio).toLocaleString('es-CL');
+
+        stockInfo.textContent = `Disponible: ${v.stock} unidad${v.stock !== 1 ? 'es' : ''}`;
+        stockInfo.className   = 'variante-stock-info disponible';
+
+        // Habilitar botón con datos de la variante
+        const sufijo = v.color ? ` (${v.talla} / ${v.color})` : ` (${v.talla})`;
+        btnModalCarrito.dataset.producto   = prod.nombre + sufijo;
+        btnModalCarrito.dataset.precio     = precio;
+        btnModalCarrito.dataset.varianteId = v.id;
+        btnModalCarrito.disabled           = false;
+        document.getElementById('variantesAviso').style.display = 'none';
+      });
+    });
   }
 
   function renderGaleria() {
@@ -373,14 +445,32 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // ===== EVENT DELEGATION para "Agregar al carrito" =====
+  // ===== BOTÓN CARRITO DEL MODAL =====
+  btnModalCarrito.addEventListener('click', function(e) {
+    e.preventDefault();
+    // Verificar si hay variantes disponibles y ninguna seleccionada
+    const variantesContainer = document.getElementById('modalVariantes');
+    if (variantesContainer.style.display !== 'none' && !this.dataset.varianteId) {
+      document.getElementById('variantesAviso').style.display = 'block';
+      return;
+    }
+    const nombre = this.dataset.producto || 'Producto';
+    const precio = parseFloat(this.dataset.precio) || 0;
+    carrito.push({ nombre, precio });
+    total += precio;
+    actualizarCarrito();
+    mostrarToast(`${nombre} agregado al carrito 🛒`);
+    if (panel) panel.classList.add('activo');
+  });
+
+  // ===== EVENT DELEGATION para "Agregar al carrito" (tarjetas) =====
   document.body.addEventListener("click", function (e) {
     const boton = e.target.closest(".agregar-carrito");
-    if (!boton) return;
+    if (!boton || boton.id === 'btnModalCarrito') return;
     e.preventDefault();
 
     const nombre   = boton.dataset.producto || "Producto";
-    const precio   = parseInt((boton.dataset.precio || "0").replace(/[^0-9]/g, ""), 10) || 0;
+    const precio   = parseFloat(boton.dataset.precio) || 0;
 
     carrito.push({ nombre, precio });
     total += precio;

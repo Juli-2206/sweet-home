@@ -116,6 +116,20 @@
           <div class="imagenes-grid" id="imagenesGrid"></div>
           <p id="uploadStatus" class="upload-status"></p>
         </div>
+        <div class="form-group">
+          <label>Variantes <small style="color:#aaa;font-weight:400">(talla, color opcional, stock)</small></label>
+          <div class="variantes-tabla" id="variantesTabla">
+            <div class="variantes-header">
+              <span>Talla / Medida</span>
+              <span>Color (opc.)</span>
+              <span>Precio</span>
+              <span>Stock</span>
+              <span></span>
+            </div>
+            <div id="variantesRows"></div>
+          </div>
+          <button type="button" class="btn-add-variante" id="btnAddVariante">+ Agregar variante</button>
+        </div>
         <button type="submit" class="btn-guardar" id="btnGuardar">Guardar producto</button>
       </form>
     </div>

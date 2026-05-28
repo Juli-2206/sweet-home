@@ -81,4 +81,43 @@ async function uploadImagen(file) {
   return publicUrl;
 }
 
-module.exports = { listar, todos, detalle, crear, editar, toggle, uploadImagen };
+// ===== VARIANTES =====
+async function listarVariantes(productoId) {
+  const { data, error } = await supabase
+    .from('variantes_producto')
+    .select('*')
+    .eq('producto_id', productoId)
+    .order('talla');
+  if (error) throw error;
+  return data;
+}
+
+async function bulkVariantes(productoId, variantes) {
+  // Reemplaza todas las variantes del producto
+  const { error: delError } = await supabase
+    .from('variantes_producto')
+    .delete()
+    .eq('producto_id', productoId);
+  if (delError) throw delError;
+
+  if (!variantes || variantes.length === 0) return [];
+
+  const rows = variantes.map(v => ({
+    producto_id: productoId,
+    talla:       String(v.talla || '').trim(),
+    color:       v.color ? String(v.color).trim() : null,
+    precio:      parseFloat(v.precio) || 0,
+    stock:       parseInt(v.stock, 10) || 0
+  })).filter(v => v.talla);
+
+  if (rows.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('variantes_producto')
+    .insert(rows)
+    .select();
+  if (error) throw error;
+  return data;
+}
+
+module.exports = { listar, todos, detalle, crear, editar, toggle, uploadImagen, listarVariantes, bulkVariantes };

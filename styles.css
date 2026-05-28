@@ -955,3 +955,75 @@ html {
     width: 95%;
   }
 }
+
+/* ===== VARIANTES EN MODAL DE PRODUCTO ===== */
+.modal-variantes {
+  margin: 14px 0 6px;
+}
+
+.variantes-titulo {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #8b6e63;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.variantes-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.btn-variante {
+  border: 1.5px solid #d4c5be;
+  border-radius: 8px;
+  background: white;
+  color: #5c4a42;
+  font-size: 0.82rem;
+  font-family: 'Poppins', Arial, sans-serif;
+  padding: 7px 16px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.btn-variante:hover:not([disabled]) {
+  border-color: #b87563;
+  color: #b87563;
+}
+
+.btn-variante.activo {
+  background: #b87563;
+  border-color: #b87563;
+  color: white;
+}
+
+.btn-variante.sin-stock,
+.btn-variante[disabled] {
+  opacity: 0.38;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.variante-stock-info {
+  font-size: 0.78rem;
+  color: #aaa;
+  min-height: 1.1em;
+}
+
+.variante-stock-info.disponible {
+  color: #27ae60;
+}
+
+.variante-stock-info.agotado {
+  color: #d94f4f;
+}
+
+.variantes-aviso {
+  font-size: 0.8rem;
+  color: #d94f4f;
+  margin: 6px 0 8px;
+  font-family: 'Poppins', Arial, sans-serif;
+}

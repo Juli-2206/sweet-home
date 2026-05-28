@@ -36,4 +36,15 @@ async function uploadImagen(req, res, next) {
   } catch(err) { next(err); }
 }
 
-module.exports = { listar, todos, detalle, crear, editar, toggle, uploadImagen };
+async function listarVariantes(req, res, next) {
+  try { res.json(await svc.listarVariantes(req.params.id)); } catch(err) { next(err); }
+}
+
+async function bulkVariantes(req, res, next) {
+  try {
+    const { variantes } = req.body;
+    res.json(await svc.bulkVariantes(req.params.id, variantes || []));
+  } catch(err) { next(err); }
+}
+
+module.exports = { listar, todos, detalle, crear, editar, toggle, uploadImagen, listarVariantes, bulkVariantes };

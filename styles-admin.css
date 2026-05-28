@@ -726,3 +726,99 @@
   margin-bottom: 0.25rem;
   font-family: 'Poppins', Arial, sans-serif;
 }
+
+/* ===== VARIANTES ===== */
+.variantes-tabla {
+  border: 1.5px solid #e0dbd5;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.variantes-header {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 90px 80px 36px;
+  gap: 6px;
+  padding: 9px 12px;
+  background: #f5f0ec;
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: #8b6e63;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: 'Poppins', Arial, sans-serif;
+}
+
+.variante-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 90px 80px 36px;
+  gap: 6px;
+  padding: 8px 12px;
+  border-top: 1px solid #f0e8e3;
+  align-items: center;
+}
+
+.variante-row input {
+  border: 1px solid #e0d5cf;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.83rem;
+  font-family: 'Poppins', Arial, sans-serif;
+  color: #3a2e2a;
+  background: white;
+  width: 100%;
+}
+
+.variante-row input:focus {
+  outline: none;
+  border-color: #b87563;
+  box-shadow: 0 0 0 2px rgba(184,117,99,0.12);
+}
+
+.btn-del-variante {
+  background: none;
+  border: 1px solid #e8b4b4;
+  border-radius: 6px;
+  color: #d94f4f;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  width: 32px;
+  height: 32px;
+}
+
+.btn-del-variante:hover {
+  background: #fdf0f0;
+}
+
+.variantes-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: #c0b0a8;
+  font-size: 0.83rem;
+  font-family: 'Poppins', Arial, sans-serif;
+}
+
+.btn-add-variante {
+  background: none;
+  border: 1.5px dashed #c9a89f;
+  border-radius: 8px;
+  color: #b87563;
+  font-size: 0.85rem;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-weight: 500;
+  padding: 9px 16px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s, border-color 0.2s;
+  margin-top: 2px;
+}
+
+.btn-add-variante:hover {
+  background: #fdf7f5;
+  border-color: #b87563;
+}

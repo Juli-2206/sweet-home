@@ -4,9 +4,10 @@ const API_URL = 'https://sweet-home-zw3h.onrender.com';
 let token    = sessionStorage.getItem('sh_token');
 let usuario  = null;
 try { usuario = JSON.parse(sessionStorage.getItem('sh_usuario')); } catch(e) {}
-let productos  = [];
-let categorias = [];
-let editId     = null;
+let productos    = [];
+let categorias   = [];
+let editId       = null;
+let variantesData = []; // [{id?, talla, color, stock}]
 
 // ===== ELEMENTOS =====
 const form         = document.getElementById("productForm");
@@ -336,11 +337,84 @@ function resetUpload() {
   renderImagenesGrid();
 }
 
+// ===== VARIANTES =====
+function renderVariantesRows() {
+  const container = document.getElementById('variantesRows');
+  if (!container) return;
+
+  if (variantesData.length === 0) {
+    container.innerHTML = `<div class="variantes-empty">Sin variantes. Agrega al menos una talla.</div>`;
+    return;
+  }
+
+  container.innerHTML = variantesData.map((v, i) => `
+    <div class="variante-row" data-index="${i}">
+      <input type="text"   class="v-talla"  placeholder="Ej: Queen"     value="${v.talla  || ''}"    data-i="${i}">
+      <input type="text"   class="v-color"  placeholder="Ej: Azul"      value="${v.color  || ''}"    data-i="${i}">
+      <input type="number" class="v-precio" placeholder="0" min="0"     value="${v.precio ?? ''}"    data-i="${i}">
+      <input type="number" class="v-stock"  placeholder="0" min="0"     value="${v.stock  ?? 0}"     data-i="${i}">
+      <button type="button" class="btn-del-variante" data-i="${i}" title="Eliminar">✕</button>
+    </div>
+  `).join('');
+
+  // Sync inputs → variantesData en tiempo real
+  container.querySelectorAll('.v-talla').forEach(el =>
+    el.addEventListener('input', e => { variantesData[+e.target.dataset.i].talla = e.target.value; }));
+  container.querySelectorAll('.v-color').forEach(el =>
+    el.addEventListener('input', e => { variantesData[+e.target.dataset.i].color = e.target.value; }));
+  container.querySelectorAll('.v-precio').forEach(el =>
+    el.addEventListener('input', e => { variantesData[+e.target.dataset.i].precio = parseFloat(e.target.value) || 0; }));
+  container.querySelectorAll('.v-stock').forEach(el =>
+    el.addEventListener('input', e => { variantesData[+e.target.dataset.i].stock = parseInt(e.target.value, 10) || 0; }));
+
+  container.querySelectorAll('.btn-del-variante').forEach(btn =>
+    btn.addEventListener('click', () => {
+      variantesData.splice(+btn.dataset.i, 1);
+      renderVariantesRows();
+    })
+  );
+}
+
+document.getElementById('btnAddVariante').addEventListener('click', () => {
+  variantesData.push({ talla: '', color: '', stock: 0 });
+  renderVariantesRows();
+  // Focus en el último input de talla
+  const rows = document.querySelectorAll('.variante-row');
+  if (rows.length) rows[rows.length - 1].querySelector('.v-talla')?.focus();
+});
+
+async function cargarVariantes(productoId) {
+  try {
+    const res = await fetch(`${API_URL}/productos/${productoId}/variantes`);
+    variantesData = await res.json();
+  } catch(err) {
+    console.error('Error cargando variantes:', err);
+    variantesData = [];
+  }
+  renderVariantesRows();
+}
+
+async function guardarVariantes(productoId) {
+  // Filtra filas sin talla
+  const validas = variantesData.filter(v => String(v.talla || '').trim());
+  const res = await fetch(`${API_URL}/productos/${productoId}/variantes`, {
+    method: 'PUT',
+    headers: headers(),
+    body: JSON.stringify({ variantes: validas })
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || 'Error al guardar variantes');
+  }
+}
+
 // ===== MODAL =====
 btnAbrirModal.addEventListener("click", () => {
   editId = null;
   form.reset();
   resetUpload();
+  variantesData = [];
+  renderVariantesRows();
   modalTitle.textContent  = "Agregar Producto";
   btnGuardar.textContent  = "Guardar producto";
   modalOverlay.classList.add("active");
@@ -355,6 +429,8 @@ function cerrarModal() {
   modalOverlay.classList.remove("active");
   form.reset();
   resetUpload();
+  variantesData = [];
+  renderVariantesRows();
   editId = null;
 }
 
@@ -444,6 +520,9 @@ form.addEventListener("submit", async (e) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error al guardar');
 
+    // Guardar variantes con el ID del producto guardado
+    await guardarVariantes(data.id);
+
     cerrarModal();
     await cargarProductos();
   } catch(err) {
@@ -467,11 +546,13 @@ function abrirEditar(id) {
   document.getElementById("categoria_id").value = prod.categorias?.id || "";
   document.getElementById("descripcion").value  = prod.descripcion || "";
   document.getElementById("precio").value       = prod.precio;
-  document.getElementById("imagen").value       = prod.imagen_url || "";
 
   // Cargar imágenes existentes
   imagenesUrls = prod.imagenes?.length ? [...prod.imagenes] : (prod.imagen_url ? [prod.imagen_url] : []);
   renderImagenesGrid();
+
+  // Cargar variantes existentes
+  cargarVariantes(id);
 
   modalOverlay.classList.add("active");
 }
