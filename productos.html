@@ -42,58 +42,10 @@
 
   <!-- ===== GRID DE PRODUCTOS ===== -->
 <section class="productos">
-  <div class="container grid-productos">
-
-    <!-- Producto 1 -->
-    <div class="producto-card">
-      <img src="menta.JPG" alt="Producto 1">
-      <h3>Edredón Menta</h3>
-      <p>$189.900</p>
-      <a href="#" class="btn-primary agregar-carrito" data-producto="Edredón Menta" data-precio="189900">
-        Agregar al carrito
-      </a>
+  <div class="container grid-productos" id="grid-productos">
+    <div class="productos-cargando" style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">
+      Cargando productos...
     </div>
-
-    <!-- Producto 2 -->
-    <div class="producto-card">
-      <img src="luxury.JPG" alt="Producto 2">
-      <h3>Sabanas Luxury</h3>
-      <p>$99.900</p>
-      <a href="#" class="btn-primary agregar-carrito" data-producto="Sabanas Luxury" data-precio="99900">
-        Agregar al carrito
-      </a>
-    </div>
-
-    <!-- Producto 3 -->
-    <div class="producto-card">
-      <img src="manta.JPG" alt="Producto 3">
-      <h3>Manta Ginger</h3>
-      <p>$89.900</p>
-      <a href="#" class="btn-primary agregar-carrito" data-producto="Manta Ginger" data-precio="89900">
-        Agregar al carrito
-      </a>
-    </div>
-
-    <!-- Producto 4 -->
-    <div class="producto-card">
-      <img src="alfombra.JPG" alt="Producto 4">
-      <h3>Alfombra Redonda Beige</h3>
-      <p>$199.900</p>
-      <a href="#" class="btn-primary agregar-carrito" data-producto="Alfombra Redonda Beige" data-precio="199900">
-        Agregar al carrito
-      </a>
-    </div>
-
-    <!-- Producto 5 -->
-    <div class="producto-card">
-      <img src="espejo.JPG" alt="Producto 5">
-      <h3>Espejo Asimétrico</h3>
-      <p>$149.900</p>
-      <a href="#" class="btn-primary agregar-carrito" data-producto="Espejo Asimétrico" data-precio="149900">
-        Agregar al carrito
-      </a>
-    </div>
-
   </div>
 </section>
   <!-- ===== FOOTER ===== -->
@@ -143,28 +95,48 @@ document.addEventListener("DOMContentLoaded", function () {
   let carrito = [];
   let total = 0;
 
-  // ===== CARGAR PRODUCTOS DEL ADMIN =====
-  const productosAdmin = JSON.parse(localStorage.getItem("productos")) || [];
+  // ===== CARGAR PRODUCTOS DESDE LA API =====
+  const API_URL = 'https://sweet-home-zw3h.onrender.com';
 
-  productosAdmin.forEach(prod => {
-    const precio = Number(prod.precio);
-    const imgTag = prod.imagen
-      ? `<img src="${prod.imagen}" alt="${prod.nombre}" onerror="this.src='https://via.placeholder.com/300x200?text=Sin+imagen'">`
-      : `<div style="height:180px;background:#f0ece8;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:2rem;">🛏</div>`;
+  async function cargarProductos() {
+    try {
+      const res = await fetch(`${API_URL}/productos`);
+      if (!res.ok) throw new Error('Error al cargar productos');
+      const productos = await res.json();
 
-    const card = document.createElement("div");
-    card.className = "producto-card";
-    card.innerHTML = `
-      ${imgTag}
-      <h3>${prod.nombre}</h3>
-      ${prod.categoria ? `<p style="font-size:0.82rem;color:#999;margin-bottom:4px">${prod.categoria}</p>` : ""}
-      <p>$${precio.toLocaleString("es-CL")}</p>
-      <a href="#" class="btn-primary agregar-carrito"
-         data-producto="${prod.nombre}" data-precio="${precio}">
-        Agregar al carrito
-      </a>`;
-    grilla.appendChild(card);
-  });
+      grilla.innerHTML = '';
+
+      if (productos.length === 0) {
+        grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">No hay productos disponibles por el momento.</div>`;
+        return;
+      }
+
+      productos.forEach(prod => {
+        const precio = Number(prod.precio);
+        const imgTag = prod.imagen_url
+          ? `<img src="${prod.imagen_url}" alt="${prod.nombre}" onerror="this.src='https://via.placeholder.com/300x200?text=Sin+imagen'">`
+          : `<div style="height:180px;background:#f0ece8;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:2rem;">🛏</div>`;
+
+        const card = document.createElement("div");
+        card.className = "producto-card";
+        card.innerHTML = `
+          ${imgTag}
+          <h3>${prod.nombre}</h3>
+          ${prod.categorias ? `<p style="font-size:0.82rem;color:#999;margin-bottom:4px">${prod.categorias.nombre}</p>` : ""}
+          <p>$${precio.toLocaleString("es-CL")}</p>
+          <a href="#" class="btn-primary agregar-carrito"
+             data-producto="${prod.nombre}" data-precio="${precio}">
+            Agregar al carrito
+          </a>`;
+        grilla.appendChild(card);
+      });
+    } catch (err) {
+      console.error(err);
+      grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">Error al cargar productos. Por favor recarga la página.</div>`;
+    }
+  }
+
+  cargarProductos();
 
   // ===== TOAST =====
   function mostrarToast(text) {

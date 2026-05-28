@@ -10,6 +10,28 @@
 </head>
 <body>
 
+  <!-- ===== LOGIN OVERLAY ===== -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="Logo1.jpg" alt="Sweet Home">
+      </div>
+      <h2>Acceso al Panel</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Correo electrónico</label>
+          <input type="email" id="loginEmail" placeholder="admin@sweethome.com" required>
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+        <p id="loginError" class="login-error"></p>
+        <button type="submit" class="btn-guardar" id="btnLoginSubmit">Ingresar</button>
+      </form>
+    </div>
+  </div>
+
   <!-- ===== NAVBAR ===== -->
   <header class="navbar">
     <div class="container nav-content">
@@ -25,7 +47,7 @@
   </header>
 
   <!-- ===== MAIN ===== -->
-  <main class="admin-main">
+  <main class="admin-main" id="adminMain">
     <div class="admin-container">
 
       <div class="admin-header">
@@ -33,7 +55,11 @@
           <h1>Actualizar Catálogo</h1>
           <p class="admin-subtitle">Gestiona tu colección de productos</p>
         </div>
-        <button class="btn-agregar" id="btnAbrirModal">+ Agregar Producto</button>
+        <div class="admin-header-actions">
+          <span id="usuarioNombre" class="usuario-nombre"></span>
+          <button class="btn-agregar" id="btnAbrirModal">+ Agregar Producto</button>
+          <button class="btn-logout" id="btnLogout">Salir</button>
+        </div>
       </div>
 
       <div class="tabla-productos">
@@ -63,7 +89,9 @@
         </div>
         <div class="form-group">
           <label>Categoría</label>
-          <input type="text" id="categoria" placeholder="Ej: Edredones">
+          <select id="categoria_id">
+            <option value="">Sin categoría</option>
+          </select>
         </div>
         <div class="form-group">
           <label>Descripción</label>
