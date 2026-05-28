@@ -30,6 +30,32 @@ const btnCancelarCat   = document.getElementById("btnCancelarCat");
 const btnGestionarCats = document.getElementById("btnGestionarCats");
 const listaCategorias  = document.getElementById("listaCategorias");
 
+// ===== MODAL CONFIRMACIÓN =====
+const modalConfirm      = document.getElementById("modalConfirm");
+const confirmMensaje    = document.getElementById("confirmMensaje");
+const btnConfirmAceptar = document.getElementById("btnConfirmAceptar");
+const btnConfirmCancelar= document.getElementById("btnConfirmCancelar");
+
+function confirmar(mensaje, textoBoton = 'Eliminar') {
+  return new Promise(resolve => {
+    confirmMensaje.textContent    = mensaje;
+    btnConfirmAceptar.textContent = textoBoton;
+    modalConfirm.classList.add("active");
+
+    const aceptar = () => { cleanup(); resolve(true);  };
+    const cancelar= () => { cleanup(); resolve(false); };
+
+    function cleanup() {
+      modalConfirm.classList.remove("active");
+      btnConfirmAceptar.removeEventListener('click', aceptar);
+      btnConfirmCancelar.removeEventListener('click', cancelar);
+    }
+
+    btnConfirmAceptar.addEventListener('click', aceptar);
+    btnConfirmCancelar.addEventListener('click', cancelar);
+  });
+}
+
 // ===== HEADERS AUTENTICADOS =====
 function headers() {
   return {
@@ -199,7 +225,7 @@ function renderListaCategorias() {
 
 async function eliminarCategoria(id) {
   const cat = categorias.find(c => c.id == id);
-  if (!confirm(`¿Eliminar la categoría "${cat?.nombre}"?`)) return;
+  if (!await confirmar(`¿Eliminar la categoría "${cat?.nombre}"?`)) return;
 
   try {
     const res = await fetch(`${API_URL}/categorias/${id}`, {
@@ -369,7 +395,7 @@ function abrirEditar(id) {
 async function toggleProducto(id) {
   const prod   = productos.find(p => p.id === id);
   const accion = prod?.activo ? 'desactivar' : 'activar';
-  if (!confirm(`¿Deseas ${accion} "${prod?.nombre}"?`)) return;
+  if (!await confirmar(`¿Deseas ${accion} "${prod?.nombre}"?`, accion.charAt(0).toUpperCase() + accion.slice(1))) return;
 
   try {
     const res = await fetch(`${API_URL}/productos/${id}/toggle`, {

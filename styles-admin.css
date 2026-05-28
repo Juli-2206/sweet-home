@@ -431,6 +431,62 @@
   margin: 0;
 }
 
+/* ===== MODAL CONFIRMACIÓN ===== */
+.modal-confirm-box {
+  max-width: 360px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.confirm-mensaje {
+  font-size: 1rem;
+  color: #333;
+  font-family: 'Poppins', Arial, sans-serif;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.confirm-acciones {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-confirm-cancelar {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: 1.5px solid #d9d0c8;
+  background: white;
+  color: #555;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-confirm-cancelar:hover {
+  border-color: #b87563;
+  color: #b87563;
+}
+
+.btn-confirm-aceptar {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  background: #d94f4f;
+  color: white;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-confirm-aceptar:hover {
+  background: #b93c3c;
+}
+
 /* ===== SELECT CATEGORÍA ===== */
 .form-group select {
   width: 100%;
