@@ -168,6 +168,7 @@ function mostrarPanel() {
   loginOverlay.style.display = 'none';
   adminMain.style.display    = 'block';
   usuarioNombre.textContent  = usuario ? usuario.nombre : '';
+  document.querySelectorAll('.nav-admin').forEach(el => el.style.display = '');
   init();
 }
 

@@ -41,8 +41,8 @@
       <nav>
         <a href="index.html">Inicio</a>
         <a href="productos.html">Productos</a>
-        <a href="admin.html">Catálogo</a>
-        <a href="ventas.html" class="nav-active">Ventas</a>
+        <a href="admin.html"  class="nav-admin" style="display:none">Catálogo</a>
+        <a href="ventas.html" class="nav-admin nav-active" style="display:none">Ventas</a>
       </nav>
     </div>
   </header>
@@ -197,6 +197,7 @@
       loginOverlay.style.display = 'none';
       adminMain.style.display    = 'block';
       usuarioNombre.textContent  = usuario ? usuario.nombre : '';
+      document.querySelectorAll('.nav-admin').forEach(el => el.style.display = '');
       initFiltros();
       cargarVentas();
       agendarRefresh();
