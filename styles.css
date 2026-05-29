@@ -451,12 +451,14 @@ html {
   background: #f7f3ef;
   border-radius: 16px 0 0 16px;
   overflow: hidden;
-  height: 460px;
+  align-self: stretch;
+  min-height: 340px;
 }
 
 .galeria-img {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -573,7 +575,7 @@ html {
   }
   .modal-galeria {
     border-radius: 16px 16px 0 0;
-    height: 260px;
+    min-height: 220px;
   }
 }
 
