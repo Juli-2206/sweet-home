@@ -451,10 +451,7 @@ html {
   background: #f7f3ef;
   border-radius: 16px 0 0 16px;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 340px;
+  height: 460px;
 }
 
 .galeria-img {
@@ -576,7 +573,7 @@ html {
   }
   .modal-galeria {
     border-radius: 16px 16px 0 0;
-    min-height: 220px;
+    height: 260px;
   }
 }
 
