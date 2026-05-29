@@ -3,7 +3,7 @@ const supabase = require('../../config/supabase');
 async function listar({ categoria, nombre }) {
   let query = supabase
     .from('productos')
-    .select('id, nombre, descripcion, precio, imagen_url, imagenes, stock, categorias(id, nombre)')
+    .select('id, nombre, descripcion, precio, imagen_url, imagenes, imagenes_titulos, stock, categorias(id, nombre)')
     .eq('activo', true)
     .order('nombre');
 

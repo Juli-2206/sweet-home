@@ -243,8 +243,9 @@ document.addEventListener("DOMContentLoaded", function () {
   let galeriaIndex    = 0;
 
   async function abrirModalProducto(prod) {
-    const rawImagenes = prod.imagenes?.length ? prod.imagenes : (prod.imagen_url ? [prod.imagen_url] : []);
-    galeriaImagenes = rawImagenes.map(img => typeof img === 'string' ? { url: img, titulo: '' } : img);
+    const urls    = prod.imagenes?.length ? prod.imagenes : (prod.imagen_url ? [prod.imagen_url] : []);
+    const titulos = prod.imagenes_titulos || [];
+    galeriaImagenes = urls.map((url, i) => ({ url, titulo: titulos[i] || '' }));
     galeriaIndex = 0;
 
     document.getElementById('modalCat').textContent        = prod.categorias?.nombre || '';

@@ -630,8 +630,9 @@ form.addEventListener("submit", async (e) => {
     nombre:       document.getElementById("nombre").value.trim(),
     descripcion:  document.getElementById("descripcion").value.trim(),
     precio:       precioBase,
-    imagen_url:   imagenesData[0]?.url || null,
-    imagenes:     imagenesData,
+    imagen_url:        imagenesData[0]?.url || null,
+    imagenes:          imagenesData.map(d => d.url),
+    imagenes_titulos:  imagenesData.map(d => d.titulo || ''),
     categoria_id: document.getElementById("categoria_id").value || null,
   };
 
@@ -843,9 +844,10 @@ function abrirEditar(id) {
   document.getElementById("descripcion").value  = prod.descripcion || "";
   document.getElementById("precio").value       = prod.precio;
 
-  // Cargar imágenes existentes (compatible con formato anterior de sólo URLs)
-  const rawImagenes = prod.imagenes?.length ? prod.imagenes : (prod.imagen_url ? [prod.imagen_url] : []);
-  imagenesData = rawImagenes.map(img => typeof img === 'string' ? { url: img, titulo: '' } : img);
+  // Cargar imágenes existentes
+  const urls    = prod.imagenes?.length ? prod.imagenes : (prod.imagen_url ? [prod.imagen_url] : []);
+  const titulos = prod.imagenes_titulos || [];
+  imagenesData  = urls.map((url, i) => ({ url, titulo: titulos[i] || '' }));
   renderImagenesGrid();
 
   // Cargar variantes y colores existentes
