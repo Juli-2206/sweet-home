@@ -423,7 +423,6 @@ document.addEventListener("DOMContentLoaded", function () {
           ${imgTag}
           <h3>${prod.nombre}</h3>
           ${prod.categorias ? `<p style="font-size:0.82rem;color:#999;margin-bottom:4px">${prod.categorias.nombre}</p>` : ""}
-          <p class="card-precio">$${precio.toLocaleString("es-CL")}</p>
           <button type="button" class="btn-primary btn-ver-producto">Ver producto</button>`;
         grilla.appendChild(card);
       });
