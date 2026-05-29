@@ -93,6 +93,7 @@
       <img class="galeria-img" id="galeriaImg" src="" alt="">
       <button class="galeria-nav galeria-next" id="galeriaNext">&#8250;</button>
       <div class="galeria-dots" id="galeriaDots"></div>
+      <p class="galeria-titulo" id="galeriaTitulo"></p>
     </div>
 
     <!-- Info -->
@@ -242,8 +243,8 @@ document.addEventListener("DOMContentLoaded", function () {
   let galeriaIndex    = 0;
 
   async function abrirModalProducto(prod) {
-    galeriaImagenes = prod.imagenes?.length ? prod.imagenes
-                    : prod.imagen_url ? [prod.imagen_url] : [];
+    const rawImagenes = prod.imagenes?.length ? prod.imagenes : (prod.imagen_url ? [prod.imagen_url] : []);
+    galeriaImagenes = rawImagenes.map(img => typeof img === 'string' ? { url: img, titulo: '' } : img);
     galeriaIndex = 0;
 
     document.getElementById('modalCat').textContent        = prod.categorias?.nombre || '';
@@ -360,10 +361,17 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function renderGaleria() {
+    const galeriaTitulo = document.getElementById('galeriaTitulo');
     if (galeriaImagenes.length === 0) {
       galeriaImg.src = 'https://via.placeholder.com/500x400?text=Sin+imagen';
+      if (galeriaTitulo) { galeriaTitulo.textContent = ''; galeriaTitulo.style.display = 'none'; }
     } else {
-      galeriaImg.src = galeriaImagenes[galeriaIndex];
+      const actual = galeriaImagenes[galeriaIndex];
+      galeriaImg.src = actual.url;
+      if (galeriaTitulo) {
+        galeriaTitulo.textContent    = actual.titulo || '';
+        galeriaTitulo.style.display  = actual.titulo ? 'block' : 'none';
+      }
     }
 
     galeriaPrev.style.display = galeriaImagenes.length > 1 ? 'flex' : 'none';

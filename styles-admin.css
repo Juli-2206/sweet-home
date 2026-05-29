@@ -558,6 +558,26 @@
   border-radius: 4px;
 }
 
+/* Título de imagen en el slot */
+.img-titulo-input {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.52);
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  font-family: 'Poppins', Arial, sans-serif;
+  outline: none;
+  border-radius: 0 0 8px 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.img-titulo-input::placeholder { color: rgba(255,255,255,0.5); }
+
 /* ===== UPLOAD IMAGEN ===== */
 .upload-area {
   border: 2px dashed #d9d0c8;

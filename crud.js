@@ -314,28 +314,32 @@ async function cargarProductos() {
 // ===== IMÁGENES MÚLTIPLES (máx 6) =====
 const imagenesGrid = document.getElementById("imagenesGrid");
 const uploadStatus = document.getElementById("uploadStatus");
-let imagenesUrls   = [];
+let imagenesData   = [];   // [{url, titulo}]
 const MAX_IMGS     = 6;
 
 function renderImagenesGrid() {
   imagenesGrid.innerHTML = '';
 
-  imagenesUrls.forEach((url, i) => {
+  imagenesData.forEach((img, i) => {
     const slot = document.createElement('div');
     slot.className = 'img-slot filled';
     slot.innerHTML = `
-      <img src="${url}" alt="Imagen ${i+1}">
+      <img src="${img.url}" alt="Imagen ${i+1}">
       <button type="button" class="img-slot-remove" data-index="${i}" title="Eliminar">✕</button>
-      ${i === 0 ? '<span class="img-principal">Principal</span>' : ''}`;
+      ${i === 0 ? '<span class="img-principal">Principal</span>' : ''}
+      <input type="text" class="img-titulo-input" placeholder="Título (opcional)" value="${img.titulo || ''}" data-index="${i}">`;
     slot.querySelector('.img-slot-remove').addEventListener('click', (e) => {
       e.stopPropagation();
-      imagenesUrls.splice(i, 1);
+      imagenesData.splice(i, 1);
       renderImagenesGrid();
+    });
+    slot.querySelector('.img-titulo-input').addEventListener('input', (e) => {
+      imagenesData[i].titulo = e.target.value;
     });
     imagenesGrid.appendChild(slot);
   });
 
-  if (imagenesUrls.length < MAX_IMGS) {
+  if (imagenesData.length < MAX_IMGS) {
     const slot = document.createElement('div');
     slot.className = 'img-slot empty';
     slot.innerHTML = `
@@ -345,7 +349,7 @@ function renderImagenesGrid() {
         <polyline points="17 8 12 3 7 8"/>
         <line x1="12" y1="3" x2="12" y2="15"/>
       </svg>
-      <span>${imagenesUrls.length === 0 ? 'Agregar imagen' : '+ Agregar'}</span>`;
+      <span>${imagenesData.length === 0 ? 'Agregar imagen' : '+ Agregar'}</span>`;
 
     const fileInput = slot.querySelector('.slot-input');
     slot.addEventListener('click', () => fileInput.click());
@@ -372,7 +376,7 @@ async function handleSlotUpload(input) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error al subir');
 
-    imagenesUrls.push(data.url);
+    imagenesData.push({ url: data.url, titulo: '' });
     renderImagenesGrid();
     uploadStatus.textContent = '✓ Imagen subida';
     uploadStatus.style.color = '#27ae60';
@@ -384,7 +388,7 @@ async function handleSlotUpload(input) {
 }
 
 function resetUpload() {
-  imagenesUrls = [];
+  imagenesData = [];
   uploadStatus.textContent = '';
   renderImagenesGrid();
 }
@@ -626,8 +630,8 @@ form.addEventListener("submit", async (e) => {
     nombre:       document.getElementById("nombre").value.trim(),
     descripcion:  document.getElementById("descripcion").value.trim(),
     precio:       precioBase,
-    imagen_url:   imagenesUrls[0] || null,
-    imagenes:     imagenesUrls,
+    imagen_url:   imagenesData[0]?.url || null,
+    imagenes:     imagenesData,
     categoria_id: document.getElementById("categoria_id").value || null,
   };
 
@@ -839,8 +843,9 @@ function abrirEditar(id) {
   document.getElementById("descripcion").value  = prod.descripcion || "";
   document.getElementById("precio").value       = prod.precio;
 
-  // Cargar imágenes existentes
-  imagenesUrls = prod.imagenes?.length ? [...prod.imagenes] : (prod.imagen_url ? [prod.imagen_url] : []);
+  // Cargar imágenes existentes (compatible con formato anterior de sólo URLs)
+  const rawImagenes = prod.imagenes?.length ? prod.imagenes : (prod.imagen_url ? [prod.imagen_url] : []);
+  imagenesData = rawImagenes.map(img => typeof img === 'string' ? { url: img, titulo: '' } : img);
   renderImagenesGrid();
 
   // Cargar variantes y colores existentes
