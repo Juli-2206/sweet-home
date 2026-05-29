@@ -15,7 +15,6 @@ async function editar(req, res, next) {
 async function toggle(req, res, next) {
   try { res.json(await svc.toggle(req.params.id)); } catch (err) { next(err); }
 }
-
 async function eliminar(req, res, next) {
   try { res.json(await svc.eliminar(req.params.id)); } catch (err) { next(err); }
 }

@@ -9,7 +9,6 @@ async function login(req, res, next) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return res.status(401).json({ error: 'Credenciales incorrectas' });
 
-    // Obtener perfil con rol
     const { data: usuario } = await supabase
       .from('usuarios')
       .select('id, nombre, email, activo, roles(nombre)')
@@ -39,7 +38,7 @@ async function refresh(req, res, next) {
 
     const { data, error } = await supabase.auth.refreshSession({ refresh_token });
     if (error || !data?.session)
-      return res.status(401).json({ error: 'Sesión expirada, inicia sesión nuevamente' });
+      return res.status(401).json({ error: 'Sesion expirada, inicia sesion nuevamente' });
 
     res.json({
       token:         data.session.access_token,
@@ -51,7 +50,7 @@ async function refresh(req, res, next) {
 async function logout(req, res, next) {
   try {
     await supabase.auth.signOut();
-    res.json({ mensaje: 'Sesión cerrada' });
+    res.json({ mensaje: 'Sesion cerrada' });
   } catch (err) { next(err); }
 }
 
