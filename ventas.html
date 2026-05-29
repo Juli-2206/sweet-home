@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Historial de Ventas | Sweet Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles-admin.css">
+</head>
+<body>
+
+  <!-- ===== LOGIN OVERLAY ===== -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="Logo1.jpg" alt="Sweet Home">
+      </div>
+      <h2>Acceso al Panel</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Correo electrónico</label>
+          <input type="email" id="loginEmail" placeholder="admin@sweethome.com" required>
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+        <p id="loginError" class="login-error"></p>
+        <button type="submit" class="btn-guardar" id="btnLoginSubmit">Ingresar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar">
+    <div class="container nav-content">
+      <div class="logo">
+        <img src="Logo1.jpg" alt="Sweet Home">
+      </div>
+      <nav>
+        <a href="index.html">Inicio</a>
+        <a href="productos.html">Productos</a>
+        <a href="admin.html">Catálogo</a>
+        <a href="ventas.html" class="nav-active">Ventas</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="admin-main" id="adminMain" style="display:none">
+    <div class="admin-container" style="max-width:1100px">
+
+      <div class="admin-header">
+        <div>
+          <h1>Historial de Ventas</h1>
+          <p class="admin-subtitle">Registro de ventas realizadas</p>
+        </div>
+        <div class="admin-header-actions">
+          <span id="usuarioNombre" class="usuario-nombre"></span>
+          <button class="btn-logout" id="btnLogout">Salir</button>
+        </div>
+      </div>
+
+      <!-- FILTROS -->
+      <div class="ventas-filtros">
+        <div class="filtro-grupo">
+          <label>Desde</label>
+          <input type="date" id="filtroDesde">
+        </div>
+        <div class="filtro-grupo">
+          <label>Hasta</label>
+          <input type="date" id="filtroHasta">
+        </div>
+        <button class="btn-filtrar" id="btnFiltrar">Filtrar</button>
+        <button class="btn-limpiar" id="btnLimpiar">Ver todo</button>
+      </div>
+
+      <!-- RESUMEN CARDS -->
+      <div class="resumen-cards" id="resumenCards">
+        <div class="resumen-card">
+          <span class="resumen-label">Total ventas</span>
+          <span class="resumen-valor" id="resumenTotal">—</span>
+        </div>
+        <div class="resumen-card">
+          <span class="resumen-label">Ingresos totales</span>
+          <span class="resumen-valor" id="resumenIngresos">—</span>
+        </div>
+        <div class="resumen-card">
+          <span class="resumen-label">Promedio por venta</span>
+          <span class="resumen-valor" id="resumenPromedio">—</span>
+        </div>
+        <div class="resumen-card">
+          <span class="resumen-label">Unidades vendidas</span>
+          <span class="resumen-valor" id="resumenUnidades">—</span>
+        </div>
+      </div>
+
+      <!-- TABLA -->
+      <div class="tabla-ventas-wrap">
+        <div class="tabla-ventas-header">
+          <span>Fecha</span>
+          <span>Producto</span>
+          <span>Talla</span>
+          <span>Color</span>
+          <span>Precio unit.</span>
+          <span>Cant.</span>
+          <span>Total</span>
+          <span>Notas</span>
+        </div>
+        <div id="ventasList"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ===== MODAL CONFIRMACIÓN (alertar) ===== -->
+  <div class="modal-overlay" id="modalConfirm">
+    <div class="modal modal-confirm-box">
+      <p class="confirm-mensaje" id="confirmMensaje"></p>
+      <div class="confirm-acciones">
+        <button class="btn-confirm-cancelar" id="btnConfirmCancelar">Cancelar</button>
+        <button class="btn-confirm-aceptar"  id="btnConfirmAceptar">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://sweet-home-zw3h.onrender.com';
+
+    let token    = sessionStorage.getItem('sh_token');
+    let usuario  = null;
+    let refreshToken = sessionStorage.getItem('sh_refresh');
+    try { usuario = JSON.parse(sessionStorage.getItem('sh_usuario')); } catch(e) {}
+
+    // ── Refresh token ──────────────────────────────
+    function agendarRefresh() {
+      setTimeout(async () => {
+        if (!refreshToken) return;
+        try {
+          const res = await fetch(`${API_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken })
+          });
+          if (res.ok) {
+            const d = await res.json();
+            token = d.token; refreshToken = d.refresh_token;
+            sessionStorage.setItem('sh_token', token);
+            sessionStorage.setItem('sh_refresh', refreshToken);
+            agendarRefresh();
+          } else { mostrarLogin(); }
+        } catch(e) { console.error(e); }
+      }, 50 * 60 * 1000);
+    }
+
+    function headers() {
+      return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+    }
+
+    // ── Modal alerta ───────────────────────────────
+    const modalConfirm      = document.getElementById('modalConfirm');
+    const confirmMensaje    = document.getElementById('confirmMensaje');
+    const btnConfirmAceptar = document.getElementById('btnConfirmAceptar');
+    const btnConfirmCancelar= document.getElementById('btnConfirmCancelar');
+
+    function alertar(msg) {
+      return new Promise(resolve => {
+        confirmMensaje.textContent       = msg;
+        btnConfirmAceptar.textContent    = 'Aceptar';
+        btnConfirmCancelar.style.display = 'none';
+        modalConfirm.classList.add('active');
+        const cerrar = () => {
+          btnConfirmCancelar.style.display = '';
+          modalConfirm.classList.remove('active');
+          btnConfirmAceptar.removeEventListener('click', cerrar);
+          resolve();
+        };
+        btnConfirmAceptar.addEventListener('click', cerrar);
+      });
+    }
+
+    // ── Auth ───────────────────────────────────────
+    const loginOverlay  = document.getElementById('loginOverlay');
+    const adminMain     = document.getElementById('adminMain');
+    const loginForm     = document.getElementById('loginForm');
+    const loginError    = document.getElementById('loginError');
+    const btnLoginSubmit= document.getElementById('btnLoginSubmit');
+    const btnLogout     = document.getElementById('btnLogout');
+    const usuarioNombre = document.getElementById('usuarioNombre');
+
+    function mostrarLogin() {
+      loginOverlay.style.display = 'flex';
+      adminMain.style.display    = 'none';
+    }
+    function mostrarPanel() {
+      loginOverlay.style.display = 'none';
+      adminMain.style.display    = 'block';
+      usuarioNombre.textContent  = usuario ? usuario.nombre : '';
+      initFiltros();
+      cargarVentas();
+      agendarRefresh();
+    }
+
+    loginForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      loginError.textContent = '';
+      btnLoginSubmit.disabled = true;
+      btnLoginSubmit.textContent = 'Ingresando...';
+      try {
+        const res = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email:    document.getElementById('loginEmail').value.trim(),
+            password: document.getElementById('loginPassword').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Credenciales incorrectas');
+        token = data.token; refreshToken = data.refresh_token; usuario = data.usuario;
+        sessionStorage.setItem('sh_token',   token);
+        sessionStorage.setItem('sh_refresh', refreshToken);
+        sessionStorage.setItem('sh_usuario', JSON.stringify(usuario));
+        mostrarPanel();
+      } catch(err) {
+        loginError.textContent = err.message;
+      } finally {
+        btnLoginSubmit.disabled = false;
+        btnLoginSubmit.textContent = 'Ingresar';
+      }
+    });
+
+    btnLogout.addEventListener('click', () => {
+      sessionStorage.clear();
+      mostrarLogin();
+    });
+
+    // ── Filtros ────────────────────────────────────
+    function initFiltros() {
+      const hoy    = new Date();
+      const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+      document.getElementById('filtroDesde').value = fmtDateInput(inicio);
+      document.getElementById('filtroHasta').value = fmtDateInput(hoy);
+    }
+
+    function fmtDateInput(d) {
+      return d.toISOString().slice(0, 10);
+    }
+
+    document.getElementById('btnFiltrar').addEventListener('click', cargarVentas);
+    document.getElementById('btnLimpiar').addEventListener('click', () => {
+      document.getElementById('filtroDesde').value = '';
+      document.getElementById('filtroHasta').value = '';
+      cargarVentas();
+    });
+
+    // ── Cargar ventas ──────────────────────────────
+    async function cargarVentas() {
+      const ventasList = document.getElementById('ventasList');
+      ventasList.innerHTML = '<div class="loading-ventas">Cargando...</div>';
+
+      const desde = document.getElementById('filtroDesde').value;
+      const hasta = document.getElementById('filtroHasta').value;
+      const params = new URLSearchParams();
+      if (desde) params.set('desde', desde + 'T00:00:00');
+      if (hasta) params.set('hasta', hasta + 'T23:59:59');
+
+      try {
+        const [resLista, resResumen] = await Promise.all([
+          fetch(`${API_URL}/ventas?${params}`, { headers: headers() }),
+          fetch(`${API_URL}/ventas/resumen?${params}`, { headers: headers() })
+        ]);
+
+        if (resLista.status === 401 || resResumen.status === 401) {
+          mostrarLogin(); return;
+        }
+
+        const ventas  = await resLista.json();
+        const resumen = await resResumen.json();
+
+        actualizarResumen(resumen, ventas);
+        renderVentas(ventas);
+      } catch(err) {
+        ventasList.innerHTML = '<div class="empty-state">Error al cargar ventas.</div>';
+        console.error(err);
+      }
+    }
+
+    // ── Resumen cards ──────────────────────────────
+    function actualizarResumen(resumen, ventas) {
+      const totalVentas   = resumen.totalVentas  || 0;
+      const totalIngresos = resumen.totalIngresos || 0;
+      const totalUnidades = ventas.reduce((s, v) => s + (v.cantidad || 1), 0);
+      const promedio      = totalVentas ? totalIngresos / totalVentas : 0;
+
+      document.getElementById('resumenTotal').textContent    = totalVentas;
+      document.getElementById('resumenIngresos').textContent = formatCLP(totalIngresos);
+      document.getElementById('resumenPromedio').textContent = formatCLP(promedio);
+      document.getElementById('resumenUnidades').textContent = totalUnidades;
+    }
+
+    // ── Render tabla ───────────────────────────────
+    function renderVentas(ventas) {
+      const el = document.getElementById('ventasList');
+      if (!ventas.length) {
+        el.innerHTML = '<div class="empty-state">No hay ventas en el período seleccionado.</div>';
+        return;
+      }
+
+      el.innerHTML = ventas.map(v => {
+        const total    = Number(v.precio) * (v.cantidad || 1);
+        const fecha    = new Date(v.fecha);
+        const fechaStr = fecha.toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric' });
+        const horaStr  = fecha.toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' });
+        return `
+        <div class="venta-row">
+          <span class="venta-fecha">
+            <span>${fechaStr}</span>
+            <small>${horaStr}</small>
+          </span>
+          <span class="venta-producto">
+            ${v.productos?.imagen_url
+              ? `<img src="${v.productos.imagen_url}" alt="" class="venta-img">`
+              : '<span class="venta-img-placeholder"></span>'
+            }
+            <span>${v.productos?.nombre || '—'}</span>
+          </span>
+          <span class="venta-chip">${v.talla  || '—'}</span>
+          <span class="venta-chip">${v.color  || '—'}</span>
+          <span class="venta-num">${formatCLP(v.precio)}</span>
+          <span class="venta-num venta-cant">${v.cantidad || 1}</span>
+          <span class="venta-num venta-total">${formatCLP(total)}</span>
+          <span class="venta-notas">${v.notas || ''}</span>
+        </div>`;
+      }).join('') + `
+        <div class="venta-row venta-row-total">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span class="venta-num venta-total">
+            ${formatCLP(ventas.reduce((s, v) => s + Number(v.precio) * (v.cantidad||1), 0))}
+          </span>
+          <span></span>
+        </div>`;
+    }
+
+    // ── Helpers ────────────────────────────────────
+    function formatCLP(n) {
+      return '$' + Math.round(n).toLocaleString('es-CL');
+    }
+
+    // ── Init ───────────────────────────────────────
+    if (token && usuario) {
+      mostrarPanel();
+    } else {
+      mostrarLogin();
+    }
+  </script>
+</body>
+</html>

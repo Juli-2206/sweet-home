@@ -978,3 +978,249 @@
   background: #fdf0f0;
   border-color: #d94f4f;
 }
+
+/* ===== PÁGINA VENTAS ===== */
+
+/* Nav activo */
+.nav-active {
+  color: #b87563 !important;
+  font-weight: 600;
+}
+
+/* Filtros */
+.ventas-filtros {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  background: white;
+  border-radius: 12px;
+  padding: 18px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  flex-wrap: wrap;
+}
+
+.filtro-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.filtro-grupo label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filtro-grupo input[type="date"] {
+  border: 1.5px solid #e8e0da;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 0.9rem;
+  color: #333;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.filtro-grupo input[type="date"]:focus {
+  border-color: #b87563;
+}
+
+.btn-filtrar {
+  padding: 9px 22px;
+  background: #b87563;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-filtrar:hover { background: #9e6050; }
+
+.btn-limpiar {
+  padding: 9px 18px;
+  background: none;
+  color: #999;
+  border: 1.5px solid #e0d8d2;
+  border-radius: 8px;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-limpiar:hover { border-color: #b87563; color: #b87563; }
+
+/* Resumen cards */
+.resumen-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.resumen-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px 22px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.resumen-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.resumen-valor {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+}
+
+/* Tabla ventas */
+.tabla-ventas-wrap {
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+
+.tabla-ventas-header {
+  display: grid;
+  grid-template-columns: 120px 1fr 90px 90px 110px 60px 110px 1fr;
+  gap: 0;
+  background: #f7f2ee;
+  padding: 12px 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #f0ebe6;
+}
+
+.venta-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 90px 90px 110px 60px 110px 1fr;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid #f7f4f1;
+  font-size: 0.88rem;
+  color: #444;
+  transition: background 0.15s;
+}
+
+.venta-row:hover { background: #fdf9f6; }
+
+.venta-row:last-child { border-bottom: none; }
+
+.venta-fecha {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.venta-fecha small {
+  color: #bbb;
+  font-size: 0.76rem;
+}
+
+.venta-producto {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  color: #333;
+}
+
+.venta-img {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #f0ebe6;
+  flex-shrink: 0;
+}
+
+.venta-img-placeholder {
+  width: 36px;
+  height: 36px;
+  background: #f0ebe6;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.venta-chip {
+  background: #f7f2ee;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 0.82rem;
+  color: #666;
+  width: fit-content;
+}
+
+.venta-num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  padding-right: 8px;
+}
+
+.venta-cant {
+  text-align: center;
+  padding-right: 0;
+}
+
+.venta-total {
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.venta-notas {
+  color: #aaa;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 8px;
+}
+
+.venta-row-total {
+  background: #f7f2ee;
+  font-weight: 700;
+}
+
+.venta-row-total:hover { background: #f7f2ee; }
+
+.loading-ventas {
+  padding: 40px;
+  text-align: center;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .resumen-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .tabla-ventas-header,
+  .venta-row {
+    grid-template-columns: 100px 1fr 70px 70px 90px 45px 90px;
+  }
+  .tabla-ventas-header span:last-child,
+  .venta-row .venta-notas { display: none; }
+}
