@@ -1037,3 +1037,15 @@ html {
   color: #c0b0a8;
   font-style: italic;
 }
+
+/* Botón carrito con selecciones pendientes */
+#btnModalCarrito.btn-carrito-pendiente {
+  opacity: 0.55;
+  cursor: pointer;
+  background: #c8a99f;
+}
+
+#btnModalCarrito.btn-carrito-pendiente:hover {
+  background: #b87563;
+  opacity: 0.7;
+}
