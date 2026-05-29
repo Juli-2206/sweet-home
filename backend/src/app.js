@@ -13,6 +13,7 @@ const inventarioRoutes  = require('./modules/inventario/inventario.routes');
 const pedidosRoutes     = require('./modules/pedidos/pedidos.routes');
 const estadosRoutes     = require('./modules/estados-pedido/estados.routes');
 const informesRoutes    = require('./modules/informes/informes.routes');
+const ventasRoutes      = require('./modules/ventas/ventas.routes');
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use('/inventario', inventarioRoutes);
 app.use('/pedidos',    pedidosRoutes);
 app.use('/estados',    estadosRoutes);
 app.use('/informes',   informesRoutes);
+app.use('/ventas',     ventasRoutes);
 
 // ── Ruta no encontrada ─────────────────────────────────────
 app.use((req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));

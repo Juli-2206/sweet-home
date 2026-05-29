@@ -574,6 +574,13 @@ function renderProductos() {
       <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
     </svg>`;
 
+  const iconVenta = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <path d="M16 10a4 4 0 0 1-8 0"/>
+    </svg>`;
+
   const iconUpload = `
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -598,9 +605,10 @@ function renderProductos() {
       <span class="product-category">${prod.categorias?.nombre || "—"}</span>
       <span class="product-price">${formatPrecio(prod.precio)}</span>
       <div class="product-actions">
-        <button class="btn-edit"        onclick="abrirEditar('${prod.id}')"      title="Editar">${iconEdit}</button>
-        <button class="btn-delete"      onclick="toggleProducto('${prod.id}')"   title="${prod.activo ? 'Desactivar' : 'Activar'}">${iconToggle}</button>
-        <button class="btn-delete-hard" onclick="eliminarProducto('${prod.id}')" title="Eliminar permanentemente">${iconTrash}</button>
+        <button class="btn-edit"        onclick="abrirEditar('${prod.id}')"        title="Editar">${iconEdit}</button>
+        <button class="btn-venta"       onclick="abrirRegistrarVenta('${prod.id}')" title="Registrar venta">${iconVenta}</button>
+        <button class="btn-delete"      onclick="toggleProducto('${prod.id}')"     title="${prod.activo ? 'Desactivar' : 'Activar'}">${iconToggle}</button>
+        <button class="btn-delete-hard" onclick="eliminarProducto('${prod.id}')"   title="Eliminar permanentemente">${iconTrash}</button>
       </div>
     </div>
   `).join("");
@@ -653,6 +661,146 @@ form.addEventListener("submit", async (e) => {
   } finally {
     btnGuardar.disabled    = false;
     btnGuardar.textContent = editId ? "Actualizar producto" : "Guardar producto";
+  }
+});
+
+// ===== REGISTRAR VENTA =====
+let ventaProdId       = null;
+let ventaVariantes    = [];
+let ventaColores      = [];
+let ventaTallaActual  = null;
+
+const modalVenta        = document.getElementById('modalVenta');
+const ventaForm         = document.getElementById('ventaForm');
+const btnCerrarModalVenta = document.getElementById('btnCerrarModalVenta');
+
+btnCerrarModalVenta.addEventListener('click', () => modalVenta.classList.remove('active'));
+modalVenta.addEventListener('click', e => { if (e.target === modalVenta) modalVenta.classList.remove('active'); });
+
+async function abrirRegistrarVenta(id) {
+  const prod = productos.find(p => String(p.id) === String(id));
+  if (!prod) return;
+
+  ventaProdId      = prod.id;
+  ventaTallaActual = null;
+
+  document.getElementById('ventaProductoNombre').textContent = prod.nombre;
+  document.getElementById('ventaPrecio').value    = prod.precio || '';
+  document.getElementById('ventaCantidad').value  = 1;
+  document.getElementById('ventaNotas').value     = '';
+  document.getElementById('ventaError').textContent = '';
+
+  // Cargar variantes
+  const tallaGroup = document.getElementById('ventaTallaGroup');
+  const tallaBtns  = document.getElementById('ventaTallaBtns');
+  tallaGroup.style.display = 'none';
+  tallaBtns.innerHTML = '';
+
+  try {
+    const res = await fetch(`${API_URL}/productos/${prod.id}/variantes`);
+    ventaVariantes = await res.json();
+    if (ventaVariantes.length > 0) {
+      tallaGroup.style.display = 'block';
+      tallaBtns.innerHTML = ventaVariantes.map((v, i) =>
+        `<button type="button" class="btn-variante-admin" data-i="${i}">
+           ${v.talla} <span style="color:#aaa;font-size:0.75rem;margin-left:4px">$${Number(v.precio).toLocaleString('es-CL')} · Stock: ${v.stock}</span>
+         </button>`
+      ).join('');
+
+      tallaBtns.querySelectorAll('.btn-variante-admin').forEach(btn => {
+        btn.addEventListener('click', () => {
+          tallaBtns.querySelectorAll('.btn-variante-admin').forEach(b => b.classList.remove('activo'));
+          btn.classList.add('activo');
+          const v = ventaVariantes[+btn.dataset.i];
+          ventaTallaActual = v.talla;
+          document.getElementById('ventaPrecio').value = v.precio;
+        });
+      });
+    }
+  } catch(e) { ventaVariantes = []; }
+
+  // Cargar colores
+  const colorGroup = document.getElementById('ventaColorGroup');
+  const colorBtns  = document.getElementById('ventaColorBtns');
+  colorGroup.style.display = 'none';
+  colorBtns.innerHTML = '';
+
+  try {
+    const res = await fetch(`${API_URL}/productos/${prod.id}/colores`);
+    ventaColores = await res.json();
+    if (ventaColores.length > 0) {
+      colorGroup.style.display = 'block';
+      colorBtns.innerHTML = ventaColores.map((c, i) =>
+        `<button type="button" class="btn-variante-admin" data-color="${c.color}">${c.color}</button>`
+      ).join('');
+      colorBtns.querySelectorAll('.btn-variante-admin').forEach(btn => {
+        btn.addEventListener('click', () => {
+          colorBtns.querySelectorAll('.btn-variante-admin').forEach(b => b.classList.remove('activo'));
+          btn.classList.add('activo');
+        });
+      });
+    }
+  } catch(e) { ventaColores = []; }
+
+  modalVenta.classList.add('active');
+}
+
+ventaForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errorEl = document.getElementById('ventaError');
+  errorEl.textContent = '';
+
+  // Validar talla obligatoria si hay variantes
+  const tallaSeleccionada = ventaTallaActual ||
+    document.querySelector('#ventaTallaBtns .btn-variante-admin.activo')?.dataset
+      ? document.querySelector('#ventaTallaBtns .btn-variante-admin.activo') ? ventaTallaActual : null
+      : null;
+
+  if (ventaVariantes.length > 0 && !ventaTallaActual) {
+    errorEl.textContent = 'Selecciona una talla antes de registrar la venta.';
+    return;
+  }
+
+  const colorActivo = document.querySelector('#ventaColorBtns .btn-variante-admin.activo');
+
+  const precio   = parseFloat(document.getElementById('ventaPrecio').value);
+  const cantidad = parseInt(document.getElementById('ventaCantidad').value, 10) || 1;
+
+  if (!precio || precio <= 0) {
+    errorEl.textContent = 'Ingresa un precio de venta válido.';
+    return;
+  }
+
+  const payload = {
+    producto_id: ventaProdId,
+    talla:       ventaTallaActual || null,
+    color:       colorActivo?.dataset.color || null,
+    precio,
+    cantidad,
+    notas:       document.getElementById('ventaNotas').value.trim() || null
+  };
+
+  const btn = document.getElementById('btnGuardarVenta');
+  btn.disabled = true;
+  btn.textContent = 'Registrando...';
+
+  try {
+    const res = await fetch(`${API_URL}/ventas`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al registrar');
+
+    modalVenta.classList.remove('active');
+    await cargarProductos(); // refresca stock en la tabla
+    await alertar(`✓ Venta registrada correctamente.\n${payload.talla ? `Talla: ${payload.talla}` : ''} ${payload.color ? `| Color: ${payload.color}` : ''}\nPrecio: $${precio.toLocaleString('es-CL')} × ${cantidad}`);
+  } catch(err) {
+    errorEl.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Registrar venta';
   }
 });
 

@@ -899,6 +899,67 @@
 
 .btn-add-color:hover { background: #a5664f; }
 
+/* ===== BOTÓN MARCAR VENDIDO ===== */
+.btn-venta {
+  background: none;
+  border: 1.5px solid #a8d5a2;
+  border-radius: 8px;
+  color: #2e7d32;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-venta:hover {
+  background: #f0faf0;
+  border-color: #2e7d32;
+}
+
+/* ===== MODAL VENTA ===== */
+.venta-producto-nombre {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #5c4a42;
+  font-family: 'Poppins', Arial, sans-serif;
+  margin: -8px 0 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f0e8e3;
+}
+
+.required-star { color: #d94f4f; }
+
+.variantes-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-variante-admin {
+  border: 1.5px solid #d4c5be;
+  border-radius: 8px;
+  background: white;
+  color: #5c4a42;
+  font-size: 0.82rem;
+  font-family: 'Poppins', Arial, sans-serif;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.btn-variante-admin:hover {
+  border-color: #b87563;
+  color: #b87563;
+}
+
+.btn-variante-admin.activo {
+  background: #b87563;
+  border-color: #b87563;
+  color: white;
+}
+
 /* ===== ELIMINAR PERMANENTE ===== */
 .btn-delete-hard {
   background: none;
