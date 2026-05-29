@@ -24,4 +24,10 @@ async function toggle(id) {
   return data;
 }
 
-module.exports = { listar, crear, editar, toggle };
+async function eliminar(id) {
+  const { error } = await supabase.from(tabla).delete().eq('id', id);
+  if (error) throw error;
+  return { ok: true };
+}
+
+module.exports = { listar, crear, editar, toggle, eliminar };

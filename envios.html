@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Envíos | Sweet Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles-admin.css">
+  <link rel="stylesheet" href="styles-envios.css">
+</head>
+<body>
+
+  <!-- ===== LOGIN OVERLAY ===== -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-logo"><img src="Logo1.jpg" alt="Sweet Home"></div>
+      <h2>Acceso al Panel</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Correo electrónico</label>
+          <input type="email" id="loginEmail" placeholder="admin@sweethome.com" required>
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+        <p id="loginError" class="login-error"></p>
+        <button type="submit" class="btn-guardar" id="btnLoginSubmit">Ingresar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar">
+    <div class="container nav-content">
+      <div class="logo"><img src="Logo1.jpg" alt="Sweet Home"></div>
+      <nav>
+        <a href="index.html">Inicio</a>
+        <a href="productos.html">Productos</a>
+        <a href="admin.html"   class="nav-admin" style="display:none">Catálogo</a>
+        <a href="ventas.html"  class="nav-admin" style="display:none">Ventas</a>
+        <a href="envios.html"  class="nav-admin nav-active" style="display:none">Envíos</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="admin-main" id="adminMain" style="display:none">
+    <div class="admin-container" style="max-width:1200px">
+
+      <div class="admin-header">
+        <div>
+          <h1>Gestión de Envíos</h1>
+          <p class="admin-subtitle">Seguimiento y estados de pedidos</p>
+        </div>
+        <div class="admin-header-actions">
+          <span id="usuarioNombre" class="usuario-nombre"></span>
+          <button class="btn-config" id="btnConfig" title="Configurar estados y tipos">⚙ Configurar</button>
+          <button class="btn-agregar" id="btnNuevoEnvio">+ Nuevo Envío</button>
+          <button class="btn-logout" id="btnLogout">Salir</button>
+        </div>
+      </div>
+
+      <!-- FILTRO POR ESTADO -->
+      <div class="envios-filtros" id="enviosFiltros"></div>
+
+      <!-- TABLA -->
+      <div class="tabla-envios-wrap">
+        <div class="tabla-envios-header">
+          <span>Cliente</span>
+          <span>Contacto</span>
+          <span>Dirección</span>
+          <span>Entrega</span>
+          <span>Estado</span>
+          <span>Fecha</span>
+          <span class="col-acciones">Acciones</span>
+        </div>
+        <div id="enviosList"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ===== MODAL NUEVO / EDITAR ENVÍO ===== -->
+  <div class="modal-overlay" id="modalEnvio">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalEnvioTitle">Nuevo Envío</h2>
+        <button class="btn-cerrar" id="btnCerrarModalEnvio">&times;</button>
+      </div>
+      <form id="envioForm">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Nombre <span class="required-star">*</span></label>
+            <input type="text" id="eNombre" placeholder="Nombre completo" required>
+          </div>
+          <div class="form-group">
+            <label>Cédula</label>
+            <input type="text" id="eCedula" placeholder="Número de documento">
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Celular</label>
+            <input type="text" id="eCelular" placeholder="+57 300 0000000">
+          </div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="eEstado">
+              <option value="">Sin estado</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Dirección <span class="required-star">*</span></label>
+          <input type="text" id="eDireccion" placeholder="Dirección completa de entrega" required>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Tipo de entrega <span class="required-star">*</span></label>
+            <select id="eTipoEntrega" required>
+              <option value="">Seleccionar...</option>
+            </select>
+          </div>
+          <div class="form-group" id="guiaGroup" style="display:none">
+            <label>Número de guía</label>
+            <input type="text" id="eGuia" placeholder="Número de guía transportadora">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notas <small style="color:#aaa;font-weight:400">(opcional)</small></label>
+          <input type="text" id="eNotas" placeholder="Ej: Llamar antes de entregar">
+        </div>
+        <p id="envioError" style="color:#d94f4f;font-size:0.83rem;min-height:1rem;font-family:'Poppins',sans-serif;"></p>
+        <button type="submit" class="btn-guardar" id="btnGuardarEnvio">Guardar envío</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== MODAL CONFIGURACIÓN ===== -->
+  <div class="modal-overlay" id="modalConfig">
+    <div class="modal modal-config">
+      <div class="modal-header">
+        <h2>Configuración</h2>
+        <button class="btn-cerrar" id="btnCerrarConfig">&times;</button>
+      </div>
+
+      <!-- ESTADOS -->
+      <div class="config-seccion">
+        <h3 class="config-titulo">Estados de pedido</h3>
+        <div id="configEstadosList" class="config-lista"></div>
+        <div class="config-add-row" id="addEstadoRow">
+          <input type="text" id="nuevoEstadoNombre" placeholder="Nombre del estado">
+          <input type="color" id="nuevoEstadoColor" value="#b87563" title="Color">
+          <button type="button" class="btn-config-add" id="btnAddEstado">+ Agregar</button>
+        </div>
+      </div>
+
+      <!-- TIPOS DE ENTREGA -->
+      <div class="config-seccion">
+        <h3 class="config-titulo">Tipos de entrega</h3>
+        <div id="configTiposList" class="config-lista"></div>
+        <div class="config-add-row">
+          <input type="text" id="nuevoTipoNombre" placeholder="Ej: Domicilio propio">
+          <button type="button" class="btn-config-add" id="btnAddTipo">+ Agregar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL CONFIRMACIÓN ===== -->
+  <div class="modal-overlay" id="modalConfirm">
+    <div class="modal modal-confirm-box">
+      <p class="confirm-mensaje" id="confirmMensaje"></p>
+      <div class="confirm-acciones">
+        <button class="btn-confirm-cancelar" id="btnConfirmCancelar">Cancelar</button>
+        <button class="btn-confirm-aceptar"  id="btnConfirmAceptar">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://sweet-home-zw3h.onrender.com';
+
+    let token        = sessionStorage.getItem('sh_token');
+    let refreshToken = sessionStorage.getItem('sh_refresh');
+    let usuario      = null;
+    try { usuario = JSON.parse(sessionStorage.getItem('sh_usuario')); } catch(e) {}
+
+    let envios       = [];
+    let estados      = [];
+    let tiposEntrega = [];
+    let editEnvioId  = null;
+    let filtroEstado = null; // null = todos
+
+    // ── Token refresh ──────────────────────────────
+    function agendarRefresh() {
+      setTimeout(async () => {
+        if (!refreshToken) return;
+        try {
+          const res = await fetch(`${API_URL}/auth/refresh`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken })
+          });
+          if (res.ok) {
+            const d = await res.json();
+            token = d.token; refreshToken = d.refresh_token;
+            sessionStorage.setItem('sh_token', token);
+            sessionStorage.setItem('sh_refresh', refreshToken);
+            agendarRefresh();
+          } else { mostrarLogin(); }
+        } catch(e) {}
+      }, 50 * 60 * 1000);
+    }
+
+    function headers() {
+      return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+    }
+
+    // ── Modales ────────────────────────────────────
+    const modalConfirm      = document.getElementById('modalConfirm');
+    const confirmMensaje    = document.getElementById('confirmMensaje');
+    const btnConfirmAceptar = document.getElementById('btnConfirmAceptar');
+    const btnConfirmCancelar= document.getElementById('btnConfirmCancelar');
+
+    function confirmar(msg, textoBtn = 'Eliminar') {
+      return new Promise(resolve => {
+        confirmMensaje.textContent       = msg;
+        btnConfirmAceptar.textContent    = textoBtn;
+        btnConfirmCancelar.style.display = '';
+        modalConfirm.classList.add('active');
+        const ok  = () => { cleanup(); resolve(true);  };
+        const no  = () => { cleanup(); resolve(false); };
+        function cleanup() {
+          modalConfirm.classList.remove('active');
+          btnConfirmAceptar.removeEventListener('click', ok);
+          btnConfirmCancelar.removeEventListener('click', no);
+        }
+        btnConfirmAceptar.addEventListener('click', ok);
+        btnConfirmCancelar.addEventListener('click', no);
+      });
+    }
+
+    function alertar(msg) {
+      return new Promise(resolve => {
+        confirmMensaje.textContent       = msg;
+        btnConfirmAceptar.textContent    = 'Aceptar';
+        btnConfirmCancelar.style.display = 'none';
+        modalConfirm.classList.add('active');
+        const cerrar = () => {
+          btnConfirmCancelar.style.display = '';
+          modalConfirm.classList.remove('active');
+          btnConfirmAceptar.removeEventListener('click', cerrar);
+          resolve();
+        };
+        btnConfirmAceptar.addEventListener('click', cerrar);
+      });
+    }
+
+    // ── Auth ───────────────────────────────────────
+    const loginOverlay   = document.getElementById('loginOverlay');
+    const adminMain      = document.getElementById('adminMain');
+    const loginForm      = document.getElementById('loginForm');
+    const loginError     = document.getElementById('loginError');
+    const btnLoginSubmit = document.getElementById('btnLoginSubmit');
+    const btnLogout      = document.getElementById('btnLogout');
+    const usuarioNombre  = document.getElementById('usuarioNombre');
+
+    function mostrarLogin() {
+      loginOverlay.style.display = 'flex';
+      adminMain.style.display    = 'none';
+    }
+
+    function mostrarPanel() {
+      loginOverlay.style.display = 'none';
+      adminMain.style.display    = 'block';
+      usuarioNombre.textContent  = usuario ? usuario.nombre : '';
+      document.querySelectorAll('.nav-admin').forEach(el => el.style.display = '');
+      init();
+      agendarRefresh();
+    }
+
+    loginForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      loginError.textContent = '';
+      btnLoginSubmit.disabled = true;
+      btnLoginSubmit.textContent = 'Ingresando...';
+      try {
+        const res = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email:    document.getElementById('loginEmail').value.trim(),
+            password: document.getElementById('loginPassword').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Credenciales incorrectas');
+        token = data.token; refreshToken = data.refresh_token; usuario = data.usuario;
+        sessionStorage.setItem('sh_token',   token);
+        sessionStorage.setItem('sh_refresh', refreshToken);
+        sessionStorage.setItem('sh_usuario', JSON.stringify(usuario));
+        mostrarPanel();
+      } catch(err) {
+        loginError.textContent = err.message;
+      } finally {
+        btnLoginSubmit.disabled = false;
+        btnLoginSubmit.textContent = 'Ingresar';
+      }
+    });
+
+    btnLogout.addEventListener('click', () => {
+      sessionStorage.clear();
+      mostrarLogin();
+    });
+
+    // ── Init ───────────────────────────────────────
+    async function init() {
+      await Promise.all([cargarEstados(), cargarTipos()]);
+      await cargarEnvios();
+    }
+
+    // ── Cargar datos ───────────────────────────────
+    async function cargarEstados() {
+      try {
+        const res = await fetch(`${API_URL}/estados`, { headers: headers() });
+        if (res.status === 401) { mostrarLogin(); return; }
+        estados = await res.json();
+        poblarSelectEstado();
+        renderFiltrosEstado();
+        renderConfigEstados();
+      } catch(e) { console.error(e); }
+    }
+
+    async function cargarTipos() {
+      try {
+        const res = await fetch(`${API_URL}/tipos-entrega`, { headers: headers() });
+        if (res.status === 401) { mostrarLogin(); return; }
+        tiposEntrega = await res.json();
+        poblarSelectTipo();
+        renderConfigTipos();
+      } catch(e) { console.error(e); }
+    }
+
+    async function cargarEnvios() {
+      const el = document.getElementById('enviosList');
+      el.innerHTML = '<div class="loading-ventas">Cargando...</div>';
+      try {
+        const params = filtroEstado ? `?estado_id=${filtroEstado}` : '';
+        const res = await fetch(`${API_URL}/envios${params}`, { headers: headers() });
+        if (res.status === 401) { mostrarLogin(); return; }
+        envios = await res.json();
+        renderEnvios();
+      } catch(e) {
+        el.innerHTML = '<div class="empty-state">Error al cargar envíos.</div>';
+      }
+    }
+
+    // ── Selects ────────────────────────────────────
+    function poblarSelectEstado() {
+      const sel = document.getElementById('eEstado');
+      const val = sel.value;
+      sel.innerHTML = '<option value="">Sin estado</option>';
+      estados.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.id;
+        opt.textContent = e.nombre;
+        sel.appendChild(opt);
+      });
+      if (val) sel.value = val;
+    }
+
+    function poblarSelectTipo() {
+      const sel = document.getElementById('eTipoEntrega');
+      const val = sel.value;
+      sel.innerHTML = '<option value="">Seleccionar...</option>';
+      tiposEntrega.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.nombre;
+        opt.textContent = t.nombre;
+        sel.appendChild(opt);
+      });
+      if (val) sel.value = val;
+    }
+
+    // ── Tipo entrega → mostrar guía ─────────────
+    document.getElementById('eTipoEntrega').addEventListener('change', function() {
+      const guiaGroup = document.getElementById('guiaGroup');
+      guiaGroup.style.display = this.value.toLowerCase() === 'transportadora' ? 'block' : 'none';
+      if (this.value.toLowerCase() !== 'transportadora') document.getElementById('eGuia').value = '';
+    });
+
+    // ── Filtros por estado ─────────────────────────
+    function renderFiltrosEstado() {
+      const el = document.getElementById('enviosFiltros');
+      el.innerHTML = `
+        <button class="filtro-estado-btn${filtroEstado === null ? ' activo' : ''}" onclick="setFiltroEstado(null)">
+          Todos
+        </button>
+        ${estados.map(e => `
+          <button class="filtro-estado-btn${filtroEstado === e.id ? ' activo' : ''}"
+            style="--estado-color:${e.color}"
+            onclick="setFiltroEstado(${e.id})">
+            ${e.nombre}
+          </button>
+        `).join('')}`;
+    }
+
+    function setFiltroEstado(id) {
+      filtroEstado = id;
+      renderFiltrosEstado();
+      cargarEnvios();
+    }
+
+    // ── Render tabla ───────────────────────────────
+    function renderEnvios() {
+      const el = document.getElementById('enviosList');
+      if (!envios.length) {
+        el.innerHTML = '<div class="empty-state">No hay envíos registrados.</div>';
+        return;
+      }
+
+      el.innerHTML = envios.map(env => {
+        const estado   = env.estados_pedido;
+        const estadoBadge = estado
+          ? `<span class="estado-badge" style="background:${estado.color}20;color:${estado.color};border-color:${estado.color}40">${estado.nombre}</span>`
+          : `<span class="estado-badge estado-sin">Sin estado</span>`;
+
+        const fecha = new Date(env.fecha);
+        const fechaStr = fecha.toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric' });
+
+        const tipoChip = env.tipo_entrega === 'Transportadora' && env.numero_guia
+          ? `${env.tipo_entrega} <small class="guia-num">#${env.numero_guia}</small>`
+          : env.tipo_entrega;
+
+        return `
+        <div class="envio-row">
+          <div class="envio-cliente">
+            <span class="envio-nombre">${env.nombre}</span>
+            ${env.cedula ? `<small class="envio-cedula">CC ${env.cedula}</small>` : ''}
+          </div>
+          <div class="envio-contacto">
+            ${env.celular ? `<span>${env.celular}</span>` : '<span class="sin-dato">—</span>'}
+          </div>
+          <div class="envio-dir">${env.direccion}</div>
+          <div class="envio-tipo">${tipoChip}</div>
+          <div class="envio-estado-col">
+            <div class="estado-dropdown-wrap" data-id="${env.id}">
+              ${estadoBadge}
+              <div class="estado-opciones" style="display:none">
+                <div class="estado-opcion estado-sin-opcion" onclick="cambiarEstado(${env.id}, null)">Sin estado</div>
+                ${estados.map(e =>
+                  `<div class="estado-opcion" style="--ec:${e.color}" onclick="cambiarEstado(${env.id}, ${e.id})">${e.nombre}</div>`
+                ).join('')}
+              </div>
+            </div>
+          </div>
+          <div class="envio-fecha">${fechaStr}</div>
+          <div class="envio-acciones">
+            <button class="btn-edit" onclick="abrirEditarEnvio(${env.id})" title="Editar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button class="btn-delete-hard" onclick="eliminarEnvio(${env.id})" title="Eliminar">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+            </button>
+          </div>
+        </div>`;
+      }).join('');
+
+      // Click en badge abre/cierra dropdown
+      document.querySelectorAll('.estado-dropdown-wrap').forEach(wrap => {
+        wrap.querySelector('.estado-badge').addEventListener('click', (e) => {
+          e.stopPropagation();
+          const opts = wrap.querySelector('.estado-opciones');
+          const abierto = opts.style.display !== 'none';
+          // Cerrar todos
+          document.querySelectorAll('.estado-opciones').forEach(o => o.style.display = 'none');
+          if (!abierto) opts.style.display = 'block';
+        });
+      });
+    }
+
+    // Cerrar dropdowns al click fuera
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.estado-opciones').forEach(o => o.style.display = 'none');
+    });
+
+    // ── Cambiar estado inline ──────────────────────
+    async function cambiarEstado(id, estado_id) {
+      try {
+        const res = await fetch(`${API_URL}/envios/${id}/estado`, {
+          method: 'PATCH', headers: headers(),
+          body: JSON.stringify({ estado_id })
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        const updated = await res.json();
+        const idx = envios.findIndex(e => e.id === id);
+        if (idx !== -1) envios[idx] = updated;
+        renderEnvios();
+        renderFiltrosEstado();
+      } catch(err) { await alertar(err.message); }
+    }
+
+    // ── Modal envío ────────────────────────────────
+    const modalEnvio     = document.getElementById('modalEnvio');
+    const envioForm      = document.getElementById('envioForm');
+    const btnNuevoEnvio  = document.getElementById('btnNuevoEnvio');
+    const btnCerrarModalEnvio = document.getElementById('btnCerrarModalEnvio');
+
+    btnNuevoEnvio.addEventListener('click', () => {
+      editEnvioId = null;
+      document.getElementById('modalEnvioTitle').textContent = 'Nuevo Envío';
+      envioForm.reset();
+      document.getElementById('guiaGroup').style.display = 'none';
+      document.getElementById('envioError').textContent = '';
+      document.getElementById('btnGuardarEnvio').textContent = 'Guardar envío';
+      modalEnvio.classList.add('active');
+    });
+
+    btnCerrarModalEnvio.addEventListener('click', () => modalEnvio.classList.remove('active'));
+    modalEnvio.addEventListener('click', e => { if (e.target === modalEnvio) modalEnvio.classList.remove('active'); });
+
+    function abrirEditarEnvio(id) {
+      const env = envios.find(e => e.id === id);
+      if (!env) return;
+      editEnvioId = id;
+      document.getElementById('modalEnvioTitle').textContent = 'Editar Envío';
+      document.getElementById('eNombre').value   = env.nombre    || '';
+      document.getElementById('eCedula').value   = env.cedula    || '';
+      document.getElementById('eCelular').value  = env.celular   || '';
+      document.getElementById('eDireccion').value= env.direccion || '';
+      document.getElementById('eNotas').value    = env.notas     || '';
+      document.getElementById('eEstado').value   = env.estado_id || '';
+      document.getElementById('eTipoEntrega').value = env.tipo_entrega || '';
+      const guiaGroup = document.getElementById('guiaGroup');
+      if ((env.tipo_entrega || '').toLowerCase() === 'transportadora') {
+        guiaGroup.style.display = 'block';
+        document.getElementById('eGuia').value = env.numero_guia || '';
+      } else {
+        guiaGroup.style.display = 'none';
+        document.getElementById('eGuia').value = '';
+      }
+      document.getElementById('envioError').textContent = '';
+      document.getElementById('btnGuardarEnvio').textContent = 'Actualizar envío';
+      modalEnvio.classList.add('active');
+    }
+
+    envioForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const errorEl = document.getElementById('envioError');
+      errorEl.textContent = '';
+      const btn = document.getElementById('btnGuardarEnvio');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+
+      const tipo = document.getElementById('eTipoEntrega').value;
+      const payload = {
+        nombre:       document.getElementById('eNombre').value.trim(),
+        cedula:       document.getElementById('eCedula').value.trim(),
+        celular:      document.getElementById('eCelular').value.trim(),
+        direccion:    document.getElementById('eDireccion').value.trim(),
+        tipo_entrega: tipo,
+        numero_guia:  tipo.toLowerCase() === 'transportadora' ? document.getElementById('eGuia').value.trim() : null,
+        estado_id:    document.getElementById('eEstado').value || null,
+        notas:        document.getElementById('eNotas').value.trim() || null
+      };
+
+      try {
+        const url    = editEnvioId ? `${API_URL}/envios/${editEnvioId}` : `${API_URL}/envios`;
+        const method = editEnvioId ? 'PUT' : 'POST';
+        const res    = await fetch(url, { method, headers: headers(), body: JSON.stringify(payload) });
+        const data   = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error al guardar');
+
+        if (editEnvioId) {
+          const idx = envios.findIndex(en => en.id === editEnvioId);
+          if (idx !== -1) envios[idx] = data;
+        } else {
+          envios.unshift(data);
+        }
+        modalEnvio.classList.remove('active');
+        renderEnvios();
+      } catch(err) {
+        errorEl.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = editEnvioId ? 'Actualizar envío' : 'Guardar envío';
+      }
+    });
+
+    // ── Eliminar envío ─────────────────────────────
+    async function eliminarEnvio(id) {
+      const env = envios.find(e => e.id === id);
+      const ok  = await confirmar(`¿Eliminar el envío de "${env?.nombre}"? Esta acción no se puede deshacer.`);
+      if (!ok) return;
+      try {
+        const res = await fetch(`${API_URL}/envios/${id}`, { method: 'DELETE', headers: headers() });
+        if (!res.ok) throw new Error((await res.json()).error);
+        envios = envios.filter(e => e.id !== id);
+        renderEnvios();
+      } catch(err) { await alertar(err.message); }
+    }
+
+    // ── Modal configuración ────────────────────────
+    const modalConfig     = document.getElementById('modalConfig');
+    const btnConfig       = document.getElementById('btnConfig');
+    const btnCerrarConfig = document.getElementById('btnCerrarConfig');
+
+    btnConfig.addEventListener('click', () => modalConfig.classList.add('active'));
+    btnCerrarConfig.addEventListener('click', () => modalConfig.classList.remove('active'));
+    modalConfig.addEventListener('click', e => { if (e.target === modalConfig) modalConfig.classList.remove('active'); });
+
+    // ── Config: Estados ────────────────────────────
+    function renderConfigEstados() {
+      const el = document.getElementById('configEstadosList');
+      if (!estados.length) { el.innerHTML = '<p class="cats-vacio">No hay estados</p>'; return; }
+      el.innerHTML = estados.map(e => `
+        <div class="config-item">
+          <span class="config-color-dot" style="background:${e.color}"></span>
+          <span class="config-item-nombre">${e.nombre}</span>
+          <button class="btn-eliminar-cat" onclick="eliminarEstado(${e.id})" title="Eliminar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>`).join('');
+    }
+
+    document.getElementById('btnAddEstado').addEventListener('click', async () => {
+      const nombre = document.getElementById('nuevoEstadoNombre').value.trim();
+      const color  = document.getElementById('nuevoEstadoColor').value;
+      if (!nombre) return;
+      try {
+        const res = await fetch(`${API_URL}/estados`, {
+          method: 'POST', headers: headers(),
+          body: JSON.stringify({ nombre, color, orden: estados.length + 1 })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        estados.push(data);
+        document.getElementById('nuevoEstadoNombre').value = '';
+        renderConfigEstados();
+        poblarSelectEstado();
+        renderFiltrosEstado();
+      } catch(err) { await alertar(err.message); }
+    });
+
+    async function eliminarEstado(id) {
+      const ok = await confirmar('¿Eliminar este estado? Los envíos con este estado quedarán sin estado asignado.');
+      if (!ok) return;
+      try {
+        const res = await fetch(`${API_URL}/estados/${id}`, { method: 'DELETE', headers: headers() });
+        if (!res.ok) throw new Error((await res.json()).error);
+        estados = estados.filter(e => e.id !== id);
+        renderConfigEstados();
+        poblarSelectEstado();
+        renderFiltrosEstado();
+        await cargarEnvios();
+      } catch(err) { await alertar(err.message); }
+    }
+
+    // ── Config: Tipos de entrega ───────────────────
+    function renderConfigTipos() {
+      const el = document.getElementById('configTiposList');
+      if (!tiposEntrega.length) { el.innerHTML = '<p class="cats-vacio">No hay tipos</p>'; return; }
+      el.innerHTML = tiposEntrega.map(t => `
+        <div class="config-item">
+          <span class="config-item-nombre">${t.nombre}</span>
+          <button class="btn-eliminar-cat" onclick="eliminarTipo(${t.id})" title="Eliminar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>`).join('');
+    }
+
+    document.getElementById('btnAddTipo').addEventListener('click', async () => {
+      const nombre = document.getElementById('nuevoTipoNombre').value.trim();
+      if (!nombre) return;
+      try {
+        const res = await fetch(`${API_URL}/tipos-entrega`, {
+          method: 'POST', headers: headers(),
+          body: JSON.stringify({ nombre })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        tiposEntrega.push(data);
+        document.getElementById('nuevoTipoNombre').value = '';
+        renderConfigTipos();
+        poblarSelectTipo();
+      } catch(err) { await alertar(err.message); }
+    });
+
+    async function eliminarTipo(id) {
+      const ok = await confirmar('¿Eliminar este tipo de entrega?');
+      if (!ok) return;
+      try {
+        const res = await fetch(`${API_URL}/tipos-entrega/${id}`, { method: 'DELETE', headers: headers() });
+        if (!res.ok) throw new Error((await res.json()).error);
+        tiposEntrega = tiposEntrega.filter(t => t.id !== id);
+        renderConfigTipos();
+        poblarSelectTipo();
+      } catch(err) { await alertar(err.message); }
+    }
+
+    // ── Arranque ───────────────────────────────────
+    if (token && usuario) {
+      mostrarPanel();
+    } else {
+      mostrarLogin();
+    }
+  </script>
+</body>
+</html>

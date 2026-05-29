@@ -7,5 +7,6 @@ router.get('/',              auth, roles('admin','negocios'), ctrl.listar);
 router.post('/',       auth, roles('admin'), ctrl.crear);
 router.put('/:id',     auth, roles('admin'), ctrl.editar);
 router.patch('/:id/toggle', auth, roles('admin'), ctrl.toggle);
+router.delete('/:id',      auth, roles('admin'), ctrl.eliminar);
 
 module.exports = router;
