@@ -101,7 +101,10 @@
       <span class="modal-cat" id="modalCat"></span>
       <h2 class="modal-nombre" id="modalNombre"></h2>
       <p class="modal-precio" id="modalPrecio"></p>
-      <p class="modal-descripcion" id="modalDescripcion"></p>
+      <div class="modal-desc-wrap">
+        <p class="modal-descripcion" id="modalDescripcion"></p>
+        <button class="btn-ver-mas" id="btnVerMas">Ver más</button>
+      </div>
 
       <!-- Selector de talla/medida -->
       <div class="modal-variantes" id="modalVariantes" style="display:none">
@@ -251,7 +254,11 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('modalCat').textContent        = prod.categorias?.nombre || '';
     document.getElementById('modalNombre').textContent     = prod.nombre;
     document.getElementById('modalPrecio').textContent     = '$' + Number(prod.precio).toLocaleString('es-CL');
-    document.getElementById('modalDescripcion').textContent= prod.descripcion || '';
+    const elDesc   = document.getElementById('modalDescripcion');
+    const btnVerMas = document.getElementById('btnVerMas');
+    elDesc.textContent = prod.descripcion || '';
+    elDesc.classList.remove('expandida');
+    btnVerMas.textContent = 'Ver más';
 
     // Reset carrito button
     btnModalCarrito.dataset.producto   = prod.nombre;
@@ -404,6 +411,13 @@ document.addEventListener("DOMContentLoaded", function () {
   modalProductoCerrar.addEventListener('click', cerrarModalProducto);
   modalProducto.addEventListener('click', e => {
     if (e.target === modalProducto) cerrarModalProducto();
+  });
+
+  // Ver más / Ver menos descripción
+  document.getElementById('btnVerMas').addEventListener('click', function() {
+    const desc = document.getElementById('modalDescripcion');
+    const expandida = desc.classList.toggle('expandida');
+    this.textContent = expandida ? 'Ver menos' : 'Ver más';
   });
 
   // Abrir modal al hacer clic en la card (excepto el botón de carrito)
