@@ -315,7 +315,7 @@ async function cargarProductos() {
 const imagenesGrid = document.getElementById("imagenesGrid");
 const uploadStatus = document.getElementById("uploadStatus");
 let imagenesData   = [];   // [{url, titulo}]
-const MAX_IMGS     = 6;
+const MAX_IMGS     = 50;
 
 function renderImagenesGrid() {
   imagenesGrid.innerHTML = '';
