@@ -267,13 +267,9 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('coloresBtns').innerHTML        = '';
     document.getElementById('varianteStockInfo').textContent= '';
 
-    renderGaleria();
-    modalProducto.classList.add('activo');
-    document.body.style.overflow = 'hidden';
-
-    // Estado de selección para validar antes del carrito
-    let varianteSeleccionada = null; // objeto variante
-    let colorSeleccionado    = null; // string color
+    // Estado de selección
+    let varianteSeleccionada = null;
+    let colorSeleccionado    = null;
     let hayVariantes         = false;
     let hayColores           = false;
 
@@ -283,7 +279,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (faltaVariante || faltaColor) {
         btnModalCarrito.classList.add('btn-carrito-pendiente');
-        // Preparar mensaje específico para cuando intente hacer clic
         let msg = '⚠ ';
         if (faltaVariante && faltaColor) msg += 'Selecciona una talla y un color para continuar.';
         else if (faltaVariante)          msg += 'Selecciona una talla antes de agregar al carrito.';
@@ -304,10 +299,15 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // Cargar variantes
+    // Cargar variantes y colores ANTES de mostrar el modal (evita saltos de layout)
     try {
-      const res = await fetch(`${API_URL}/productos/${prod.id}/variantes`);
-      const variantes = await res.json();
+      const [resV, resC] = await Promise.all([
+        fetch(`${API_URL}/productos/${prod.id}/variantes`),
+        fetch(`${API_URL}/productos/${prod.id}/colores`)
+      ]);
+      const variantes = await resV.json();
+      const colores   = await resC.json();
+
       if (variantes && variantes.length > 0) {
         hayVariantes = true;
         btnModalCarrito.classList.add('btn-carrito-pendiente');
@@ -333,19 +333,14 @@ document.addEventListener("DOMContentLoaded", function () {
           });
         });
       }
-    } catch(err) { console.error('Error cargando variantes:', err); }
 
-    // Cargar colores
-    try {
-      const res = await fetch(`${API_URL}/productos/${prod.id}/colores`);
-      const colores = await res.json();
       if (colores && colores.length > 0) {
         hayColores = true;
         btnModalCarrito.classList.add('btn-carrito-pendiente');
         document.getElementById('modalColores').style.display = 'block';
 
         const btns = document.getElementById('coloresBtns');
-        btns.innerHTML = colores.map((c, i) =>
+        btns.innerHTML = colores.map(c =>
           `<button type="button" class="btn-variante" data-color="${c.color}">${c.color}</button>`
         ).join('');
 
@@ -358,7 +353,12 @@ document.addEventListener("DOMContentLoaded", function () {
           });
         });
       }
-    } catch(err) { console.error('Error cargando colores:', err); }
+    } catch(err) { console.error('Error cargando variantes/colores:', err); }
+
+    // Mostrar modal con todo el contenido ya listo
+    renderGaleria();
+    modalProducto.classList.add('activo');
+    document.body.style.overflow = 'hidden';
   }
 
   function renderGaleria() {
