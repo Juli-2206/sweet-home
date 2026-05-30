@@ -284,6 +284,11 @@ document.addEventListener("DOMContentLoaded", function () {
       const faltaVariante = hayVariantes && !varianteSeleccionada;
       const faltaColor    = hayColores   && !colorSeleccionado;
 
+      // Actualizar precio en el modal según variante seleccionada (independiente del color)
+      if (varianteSeleccionada) {
+        document.getElementById('modalPrecio').textContent = '$' + Number(varianteSeleccionada.precio).toLocaleString('es-CL');
+      }
+
       if (faltaVariante || faltaColor) {
         btnModalCarrito.classList.add('btn-carrito-pendiente');
         let msg = '⚠ ';
@@ -320,6 +325,14 @@ document.addEventListener("DOMContentLoaded", function () {
         btnModalCarrito.classList.add('btn-carrito-pendiente');
         document.getElementById('modalVariantes').style.display = 'block';
 
+        // Precio inicial: base del producto o el menor precio entre las variantes
+        if (!prod.precio || prod.precio <= 0) {
+          const precioMin = Math.min(...variantes.filter(v => v.precio > 0).map(v => v.precio));
+          if (isFinite(precioMin)) {
+            document.getElementById('modalPrecio').textContent = 'Desde $' + Number(precioMin).toLocaleString('es-CL');
+          }
+        }
+
         const btns      = document.getElementById('variantesBtns');
         const stockInfo = document.getElementById('varianteStockInfo');
 
@@ -336,6 +349,8 @@ document.addEventListener("DOMContentLoaded", function () {
             varianteSeleccionada = variantes[+btn.dataset.index];
             stockInfo.textContent = `Disponible: ${varianteSeleccionada.stock} unidad${varianteSeleccionada.stock !== 1 ? 'es' : ''}`;
             stockInfo.className   = 'variante-stock-info disponible';
+            // Mostrar precio de la variante inmediatamente al seleccionar talla
+            document.getElementById('modalPrecio').textContent = '$' + Number(varianteSeleccionada.precio).toLocaleString('es-CL');
             actualizarBotonCarrito();
           });
         });

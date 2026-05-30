@@ -123,7 +123,7 @@ async function listarVariantes(productoId) {
     .from('variantes_producto')
     .select('*')
     .eq('producto_id', productoId)
-    .order('talla');
+    .order('id');
   if (error) throw error;
   return data;
 }
