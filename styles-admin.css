@@ -984,6 +984,22 @@
   color: white;
 }
 
+.btn-variante-admin.sin-stock,
+.btn-variante-admin:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: #e0d8d3;
+  color: #b0a098;
+  background: #f8f5f3;
+  text-decoration: line-through;
+}
+
+.btn-variante-admin.sin-stock:hover,
+.btn-variante-admin:disabled:hover {
+  border-color: #e0d8d3;
+  color: #b0a098;
+}
+
 /* ===== ELIMINAR PERMANENTE ===== */
 .btn-delete-hard {
   background: none;

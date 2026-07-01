@@ -614,14 +614,75 @@ form.addEventListener("submit", async (e) => {
 // ===== REGISTRAR VENTA =====
 let ventaProdId          = null;
 let ventaVariantes       = [];
-let ventaVarianteActual  = null; // {talla, color, precio, stock}
+let ventaVarianteActual  = null; // variante completa seleccionada
+let ventaTallaActual     = null; // talla seleccionada en el paso 1
+let ventaColorActual     = null; // color seleccionado en el paso 2
 
-const modalVenta        = document.getElementById('modalVenta');
-const ventaForm         = document.getElementById('ventaForm');
+const modalVenta          = document.getElementById('modalVenta');
+const ventaForm           = document.getElementById('ventaForm');
 const btnCerrarModalVenta = document.getElementById('btnCerrarModalVenta');
 
 btnCerrarModalVenta.addEventListener('click', () => modalVenta.classList.remove('active'));
 modalVenta.addEventListener('click', e => { if (e.target === modalVenta) modalVenta.classList.remove('active'); });
+
+// Actualiza qué botones de COLOR están habilitados según la talla activa
+function actualizarBotonesColor(tallaBloqueante) {
+  const colorBtns = document.getElementById('ventaColorBtns');
+  if (!colorBtns) return;
+  colorBtns.querySelectorAll('.btn-variante-admin').forEach(btn => {
+    const color = btn.dataset.color;
+    const tieneStock = ventaVariantes.some(v =>
+      (tallaBloqueante ? v.talla === tallaBloqueante : true) &&
+      v.color === color && v.stock > 0
+    );
+    btn.disabled = !tieneStock;
+    btn.classList.toggle('sin-stock', !tieneStock);
+    // Si el color activo ya no aplica, deseleccionarlo
+    if (!tieneStock && btn.classList.contains('activo')) {
+      btn.classList.remove('activo');
+      ventaColorActual = null;
+      ventaVarianteActual = null;
+      document.getElementById('ventaPrecio').value = '';
+    }
+  });
+}
+
+// Actualiza qué botones de TALLA están habilitados según el color activo
+function actualizarBotonesTalla(colorBloqueante) {
+  const tallaBtns = document.getElementById('ventaTallaBtns');
+  if (!tallaBtns) return;
+  tallaBtns.querySelectorAll('.btn-variante-admin').forEach(btn => {
+    const talla = btn.dataset.talla;
+    const tieneStock = ventaVariantes.some(v =>
+      v.talla === talla &&
+      (colorBloqueante ? v.color === colorBloqueante : true) &&
+      v.stock > 0
+    );
+    btn.disabled = !tieneStock;
+    btn.classList.toggle('sin-stock', !tieneStock);
+    if (!tieneStock && btn.classList.contains('activo')) {
+      btn.classList.remove('activo');
+      ventaTallaActual = null;
+      ventaVarianteActual = null;
+      document.getElementById('ventaPrecio').value = '';
+    }
+  });
+}
+
+// Resuelve la variante cuando la selección está completa
+function resolverVariante() {
+  const hayTallas  = ventaVariantes.some(v => v.talla);
+  const hayColores = ventaVariantes.some(v => v.color);
+  if (hayTallas  && !ventaTallaActual) return;
+  if (hayColores && !ventaColorActual) return;
+  const v = ventaVariantes.find(v =>
+    (!hayTallas  || v.talla === ventaTallaActual) &&
+    (!hayColores || v.color === ventaColorActual) &&
+    v.stock > 0
+  );
+  ventaVarianteActual = v || null;
+  document.getElementById('ventaPrecio').value = v ? v.precio : '';
+}
 
 async function abrirRegistrarVenta(id) {
   const prod = productos.find(p => String(p.id) === String(id));
@@ -629,6 +690,8 @@ async function abrirRegistrarVenta(id) {
 
   ventaProdId         = prod.id;
   ventaVarianteActual = null;
+  ventaTallaActual    = null;
+  ventaColorActual    = null;
 
   document.getElementById('ventaProductoNombre').textContent = prod.nombre;
   document.getElementById('ventaPrecio').value    = prod.precio || '';
@@ -636,32 +699,68 @@ async function abrirRegistrarVenta(id) {
   document.getElementById('ventaNotas').value     = '';
   document.getElementById('ventaError').textContent = '';
 
-  const varianteGroup = document.getElementById('ventaVarianteGroup');
-  const varianteBtns  = document.getElementById('ventaVarianteBtns');
-  varianteGroup.style.display = 'none';
-  varianteBtns.innerHTML = '';
+  const tallaGroup = document.getElementById('ventaTallaGroup');
+  const tallaBtns  = document.getElementById('ventaTallaBtns');
+  const colorGroup = document.getElementById('ventaColorGroup');
+  const colorBtns  = document.getElementById('ventaColorBtns');
+
+  tallaGroup.style.display = 'none';
+  colorGroup.style.display = 'none';
+  tallaBtns.innerHTML = '';
+  colorBtns.innerHTML = '';
 
   try {
     const res = await fetch(`${API_URL}/productos/${prod.id}/variantes`);
     ventaVariantes = await res.json();
-    if (ventaVariantes.length > 0) {
-      varianteGroup.style.display = 'block';
-      varianteBtns.innerHTML = ventaVariantes.map((v, i) => {
-        const label = [v.talla, v.color].filter(Boolean).join(' · ');
-        return `<button type="button" class="btn-variante-admin" data-i="${i}">
-          ${label} <span style="color:#aaa;font-size:0.75rem;margin-left:4px">$${Number(v.precio).toLocaleString('es-CL')} · Stock: ${v.stock}</span>
-        </button>`;
-      }).join('');
 
-      varianteBtns.querySelectorAll('.btn-variante-admin').forEach(btn => {
+    // Tallas únicas que tengan al menos 1 variante con stock > 0
+    const tallas = [...new Set(
+      ventaVariantes.filter(v => v.talla && v.stock > 0).map(v => v.talla)
+    )];
+
+    // Colores únicos que tengan al menos 1 variante con stock > 0
+    const colores = [...new Set(
+      ventaVariantes.filter(v => v.color && v.stock > 0).map(v => v.color)
+    )];
+
+    if (tallas.length > 0) {
+      tallaGroup.style.display = 'block';
+      tallaBtns.innerHTML = tallas.map(t =>
+        `<button type="button" class="btn-variante-admin" data-talla="${t}">${t}</button>`
+      ).join('');
+
+      tallaBtns.querySelectorAll('.btn-variante-admin').forEach(btn => {
         btn.addEventListener('click', () => {
-          varianteBtns.querySelectorAll('.btn-variante-admin').forEach(b => b.classList.remove('activo'));
+          if (btn.disabled) return;
+          tallaBtns.querySelectorAll('.btn-variante-admin').forEach(b => b.classList.remove('activo'));
           btn.classList.add('activo');
-          ventaVarianteActual = ventaVariantes[+btn.dataset.i];
-          document.getElementById('ventaPrecio').value = ventaVarianteActual.precio;
+          ventaTallaActual = btn.dataset.talla;
+          // Filtrar colores disponibles para esta talla
+          actualizarBotonesColor(ventaTallaActual);
+          resolverVariante();
         });
       });
     }
+
+    if (colores.length > 0) {
+      colorGroup.style.display = 'block';
+      colorBtns.innerHTML = colores.map(c =>
+        `<button type="button" class="btn-variante-admin" data-color="${c}">${c}</button>`
+      ).join('');
+
+      colorBtns.querySelectorAll('.btn-variante-admin').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.disabled) return;
+          colorBtns.querySelectorAll('.btn-variante-admin').forEach(b => b.classList.remove('activo'));
+          btn.classList.add('activo');
+          ventaColorActual = btn.dataset.color;
+          // Filtrar tallas disponibles para este color
+          actualizarBotonesTalla(ventaColorActual);
+          resolverVariante();
+        });
+      });
+    }
+
   } catch(e) { ventaVariantes = []; }
 
   modalVenta.classList.add('active');
