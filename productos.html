@@ -290,26 +290,23 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('varianteStockInfo').textContent= '';
 
     // Estado de selección
-    let varianteSeleccionada = null;
-    let colorSeleccionado    = null;
-    let hayVariantes         = false;
-    let hayColores           = false;
+    let varianteResuelta  = null; // variante exacta (talla+color) seleccionada
+    let tallaActual       = null;
+    let colorActual       = null;
+    let hayTallas         = false;
+    let hayColores        = false;
+    let variantes         = [];
 
     function actualizarBotonCarrito() {
-      const faltaVariante = hayVariantes && !varianteSeleccionada;
-      const faltaColor    = hayColores   && !colorSeleccionado;
+      const faltaTalla  = hayTallas  && !tallaActual;
+      const faltaColor  = hayColores && !colorActual;
 
-      // Actualizar precio en el modal según variante seleccionada (independiente del color)
-      if (varianteSeleccionada) {
-        document.getElementById('modalPrecio').textContent = '$' + Number(varianteSeleccionada.precio).toLocaleString('es-CL');
-      }
-
-      if (faltaVariante || faltaColor) {
+      if (faltaTalla || faltaColor) {
         btnModalCarrito.classList.add('btn-carrito-pendiente');
         let msg = '⚠ ';
-        if (faltaVariante && faltaColor) msg += 'Selecciona una talla y un color para continuar.';
-        else if (faltaVariante)          msg += 'Selecciona una talla antes de agregar al carrito.';
-        else                             msg += 'Selecciona un color antes de agregar al carrito.';
+        if (faltaTalla && faltaColor) msg += 'Selecciona una talla y un color para continuar.';
+        else if (faltaTalla)          msg += 'Selecciona una talla antes de agregar al carrito.';
+        else                          msg += 'Selecciona un color antes de agregar al carrito.';
         btnModalCarrito.dataset.avisoMsg = msg;
       } else {
         btnModalCarrito.classList.remove('btn-carrito-pendiente');
@@ -317,80 +314,132 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('variantesAviso').style.display = 'none';
 
         let nombre = prod.nombre;
-        if (varianteSeleccionada) nombre += ` (${varianteSeleccionada.talla})`;
-        if (colorSeleccionado)    nombre += ` - ${colorSeleccionado}`;
-        const precio = varianteSeleccionada ? varianteSeleccionada.precio : prod.precio;
+        if (tallaActual)  nombre += ` (${tallaActual})`;
+        if (colorActual)  nombre += ` - ${colorActual}`;
+        const precio = varianteResuelta ? varianteResuelta.precio : prod.precio;
         btnModalCarrito.dataset.producto = nombre;
         btnModalCarrito.dataset.precio   = precio;
         document.getElementById('modalPrecio').textContent = '$' + Number(precio).toLocaleString('es-CL');
       }
     }
 
-    // Cargar variantes y colores ANTES de mostrar el modal (evita saltos de layout)
-    try {
-      const [resV, resC] = await Promise.all([
-        fetch(`${API_URL}/productos/${prod.id}/variantes`),
-        fetch(`${API_URL}/productos/${prod.id}/colores`)
-      ]);
-      const variantes = await resV.json();
-      const colores   = await resC.json();
+    // Filtra colores habilitados según la talla activa y viceversa
+    function filtrarColoresPorTalla(talla) {
+      const disponibles = new Set(
+        variantes.filter(v => (!talla || v.talla === talla) && v.stock > 0).map(v => v.color).filter(Boolean)
+      );
+      document.getElementById('coloresBtns').querySelectorAll('.btn-variante').forEach(btn => {
+        const ok = disponibles.has(btn.dataset.color);
+        btn.disabled = !ok;
+        btn.classList.toggle('sin-stock', !ok);
+        if (!ok && btn.classList.contains('activo')) {
+          btn.classList.remove('activo');
+          colorActual    = null;
+          varianteResuelta = null;
+        }
+      });
+    }
 
-      if (variantes && variantes.length > 0) {
-        hayVariantes = true;
+    function filtrarTallasPorColor(color) {
+      const disponibles = new Set(
+        variantes.filter(v => (!color || v.color === color) && v.stock > 0).map(v => v.talla).filter(Boolean)
+      );
+      document.getElementById('variantesBtns').querySelectorAll('.btn-variante').forEach(btn => {
+        const ok = disponibles.has(btn.dataset.talla);
+        btn.disabled = !ok;
+        btn.classList.toggle('sin-stock', !ok);
+        if (!ok && btn.classList.contains('activo')) {
+          btn.classList.remove('activo');
+          tallaActual    = null;
+          varianteResuelta = null;
+        }
+      });
+    }
+
+    function resolverVariante() {
+      if (hayTallas  && !tallaActual)  return;
+      if (hayColores && !colorActual)  return;
+      varianteResuelta = variantes.find(v =>
+        (!hayTallas  || v.talla === tallaActual) &&
+        (!hayColores || v.color === colorActual) &&
+        v.stock > 0
+      ) || null;
+      const stockInfo = document.getElementById('varianteStockInfo');
+      if (varianteResuelta) {
+        stockInfo.textContent = `Disponible: ${varianteResuelta.stock} unidad${varianteResuelta.stock !== 1 ? 'es' : ''}`;
+        stockInfo.className   = 'variante-stock-info disponible';
+        document.getElementById('modalPrecio').textContent = '$' + Number(varianteResuelta.precio).toLocaleString('es-CL');
+      } else {
+        stockInfo.textContent = '';
+      }
+    }
+
+    // Cargar variantes ANTES de mostrar el modal (evita saltos de layout)
+    try {
+      const resV = await fetch(`${API_URL}/productos/${prod.id}/variantes`);
+      variantes  = await resV.json();
+
+      const tallas  = [...new Set(variantes.filter(v => v.talla && v.stock > 0).map(v => v.talla))];
+      const colores = [...new Set(variantes.filter(v => v.color && v.stock > 0).map(v => v.color))];
+
+      if (tallas.length > 0) {
+        hayTallas = true;
         btnModalCarrito.classList.add('btn-carrito-pendiente');
         document.getElementById('modalVariantes').style.display = 'block';
 
-        // Precio inicial: base del producto o el menor precio entre las variantes
+        // Precio inicial: mínimo entre variantes con stock
         if (!prod.precio || prod.precio <= 0) {
-          const precioMin = Math.min(...variantes.filter(v => v.precio > 0).map(v => v.precio));
-          if (isFinite(precioMin)) {
+          const precioMin = Math.min(...variantes.filter(v => v.precio > 0 && v.stock > 0).map(v => v.precio));
+          if (isFinite(precioMin))
             document.getElementById('modalPrecio').textContent = 'Desde $' + Number(precioMin).toLocaleString('es-CL');
-          }
         }
 
-        const btns      = document.getElementById('variantesBtns');
-        const stockInfo = document.getElementById('varianteStockInfo');
-
-        btns.innerHTML = variantes.map((v, i) => {
-          const sinStock = v.stock <= 0;
-          return `<button type="button" class="btn-variante${sinStock ? ' sin-stock' : ''}"
-                    data-index="${i}" ${sinStock ? 'disabled' : ''}>${v.talla}</button>`;
+        const btnsEl = document.getElementById('variantesBtns');
+        // Mostrar todas las tallas únicas; sin-stock si no tienen stock en ningún color
+        const todasTallas = [...new Set(variantes.map(v => v.talla).filter(Boolean))];
+        btnsEl.innerHTML = todasTallas.map(t => {
+          const conStock = variantes.some(v => v.talla === t && v.stock > 0);
+          return `<button type="button" class="btn-variante${conStock ? '' : ' sin-stock'}"
+                    data-talla="${t}" ${conStock ? '' : 'disabled'}>${t}</button>`;
         }).join('');
 
-        btns.querySelectorAll('.btn-variante:not([disabled])').forEach(btn => {
+        btnsEl.querySelectorAll('.btn-variante:not([disabled])').forEach(btn => {
           btn.addEventListener('click', () => {
-            btns.querySelectorAll('.btn-variante').forEach(b => b.classList.remove('activo'));
+            btnsEl.querySelectorAll('.btn-variante').forEach(b => b.classList.remove('activo'));
             btn.classList.add('activo');
-            varianteSeleccionada = variantes[+btn.dataset.index];
-            stockInfo.textContent = `Disponible: ${varianteSeleccionada.stock} unidad${varianteSeleccionada.stock !== 1 ? 'es' : ''}`;
-            stockInfo.className   = 'variante-stock-info disponible';
-            // Mostrar precio de la variante inmediatamente al seleccionar talla
-            document.getElementById('modalPrecio').textContent = '$' + Number(varianteSeleccionada.precio).toLocaleString('es-CL');
+            tallaActual = btn.dataset.talla;
+            filtrarColoresPorTalla(tallaActual);
+            resolverVariante();
             actualizarBotonCarrito();
           });
         });
       }
 
-      if (colores && colores.length > 0) {
+      if (colores.length > 0) {
         hayColores = true;
         btnModalCarrito.classList.add('btn-carrito-pendiente');
         document.getElementById('modalColores').style.display = 'block';
 
-        const btns = document.getElementById('coloresBtns');
-        btns.innerHTML = colores.map(c =>
-          `<button type="button" class="btn-variante" data-color="${c.color}">${c.color}</button>`
-        ).join('');
+        const btnsEl = document.getElementById('coloresBtns');
+        const todosColores = [...new Set(variantes.map(v => v.color).filter(Boolean))];
+        btnsEl.innerHTML = todosColores.map(c => {
+          const conStock = variantes.some(v => v.color === c && v.stock > 0);
+          return `<button type="button" class="btn-variante${conStock ? '' : ' sin-stock'}"
+                    data-color="${c}" ${conStock ? '' : 'disabled'}>${c}</button>`;
+        }).join('');
 
-        btns.querySelectorAll('.btn-variante').forEach(btn => {
+        btnsEl.querySelectorAll('.btn-variante:not([disabled])').forEach(btn => {
           btn.addEventListener('click', () => {
-            btns.querySelectorAll('.btn-variante').forEach(b => b.classList.remove('activo'));
+            btnsEl.querySelectorAll('.btn-variante').forEach(b => b.classList.remove('activo'));
             btn.classList.add('activo');
-            colorSeleccionado = btn.dataset.color;
+            colorActual = btn.dataset.color;
+            filtrarTallasPorColor(colorActual);
+            resolverVariante();
             actualizarBotonCarrito();
           });
         });
       }
-    } catch(err) { console.error('Error cargando variantes/colores:', err); }
+    } catch(err) { console.error('Error cargando variantes:', err); }
 
     // Mostrar modal con todo el contenido ya listo
     renderGaleria();
