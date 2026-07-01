@@ -141,6 +141,7 @@ async function bulkVariantes(productoId, variantes) {
   const rows = variantes.map(v => ({
     producto_id: productoId,
     talla:       String(v.talla || '').trim(),
+    color:       String(v.color || '').trim() || null,
     precio:      parseFloat(v.precio) || 0,
     stock:       parseInt(v.stock, 10) || 0
   })).filter(v => v.talla);
