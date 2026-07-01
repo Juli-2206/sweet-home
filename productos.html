@@ -155,19 +155,77 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let carrito = [];
   let total = 0;
+  let productosData = [];
 
   // ===== API =====
   const API_URL = 'https://sweet-home-zw3h.onrender.com';
   const filtrosBtns = document.getElementById('filtros-btns');
   let categoriaActiva = '';
 
-  // ===== CARGAR CATEGORÍAS (solo las que tienen productos) =====
-  async function cargarCategorias() {
+  // ===== RENDER PRODUCTOS (desde memoria, sin fetch) =====
+  function renderProductos(lista) {
+    grilla.innerHTML = '';
+    if (lista.length === 0) {
+      grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">No hay productos en esta categoría.</div>`;
+      return;
+    }
+    lista.forEach(prod => {
+      const imgTag = prod.imagen_url
+        ? `<img src="${prod.imagen_url}" alt="${prod.nombre}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x200?text=Sin+imagen'">`
+        : `<div style="height:180px;background:#f0ece8;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:2rem;">🛏</div>`;
+      const card = document.createElement('div');
+      card.className = 'producto-card';
+      card.dataset.id = String(prod.id);
+      card.style.cursor = 'pointer';
+      card.innerHTML = `
+        ${imgTag}
+        <h3>${prod.nombre}</h3>
+        ${prod.categorias ? `<p style="font-size:0.82rem;color:#999;margin-bottom:4px">${prod.categorias.nombre}</p>` : ''}
+        <button type="button" class="btn-primary btn-ver-producto">Ver producto</button>`;
+      grilla.appendChild(card);
+    });
+  }
+
+  // ===== SKELETON mientras carga =====
+  function mostrarSkeleton() {
+    grilla.innerHTML = '';
+    for (let i = 0; i < 6; i++) {
+      const s = document.createElement('div');
+      s.className = 'skeleton-card';
+      s.innerHTML = `
+        <div class="skeleton-img"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line corta"></div>
+        <div class="skeleton-line btn"></div>`;
+      grilla.appendChild(s);
+    }
+  }
+
+  // ===== FILTRO EN MEMORIA =====
+  function seleccionarFiltro(btn, id) {
+    document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('activo'));
+    btn.classList.add('activo');
+    categoriaActiva = id;
+    const filtrados = id ? productosData.filter(p => String(p.categorias?.id) === String(id)) : productosData;
+    renderProductos(filtrados);
+  }
+
+  // Botón "Todos"
+  filtrosBtns.querySelector('[data-id=""]').addEventListener('click', function() {
+    seleccionarFiltro(this, '');
+  });
+
+  // ===== INICIALIZAR: UN SOLO FETCH =====
+  async function inicializar() {
+    mostrarSkeleton();
     try {
       const res = await fetch(`${API_URL}/productos`);
-      const productos = await res.json();
+      if (!res.ok) throw new Error();
+      productosData = await res.json();
+
+      // Construir botones de categoría solo con las que tienen productos
       const categoriasVistas = new Map();
-      productos.forEach(prod => {
+      productosData.forEach(prod => {
         if (prod.categorias && !categoriasVistas.has(prod.categorias.id)) {
           categoriasVistas.set(prod.categorias.id, prod.categorias.nombre);
         }
@@ -180,65 +238,16 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.addEventListener('click', () => seleccionarFiltro(btn, id));
         filtrosBtns.appendChild(btn);
       });
-    } catch(err) {
-      console.error('Error cargando categorías:', err);
-    }
-  }
 
-  function seleccionarFiltro(btn, id) {
-    document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('activo'));
-    btn.classList.add('activo');
-    categoriaActiva = id;
-    cargarProductos();
-  }
-
-  // Botón "Todos"
-  filtrosBtns.querySelector('[data-id=""]').addEventListener('click', function() {
-    seleccionarFiltro(this, '');
-  });
-
-  // ===== CARGAR PRODUCTOS =====
-  async function cargarProductos() {
-    try {
-      grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">Cargando productos...</div>`;
-      const url = categoriaActiva
-        ? `${API_URL}/productos?categoria=${categoriaActiva}`
-        : `${API_URL}/productos`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Error al cargar productos');
-      const productos = await res.json();
-
-      grilla.innerHTML = '';
-
-      if (productos.length === 0) {
-        grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">No hay productos en esta categoría.</div>`;
-        return;
-      }
-
-      productos.forEach(prod => {
-        const precio = Number(prod.precio);
-        const imgTag = prod.imagen_url
-          ? `<img src="${prod.imagen_url}" alt="${prod.nombre}" onerror="this.src='https://via.placeholder.com/300x200?text=Sin+imagen'">`
-          : `<div style="height:180px;background:#f0ece8;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:2rem;">🛏</div>`;
-
-        const card = document.createElement("div");
-        card.className = "producto-card";
-        card.innerHTML = `
-          ${imgTag}
-          <h3>${prod.nombre}</h3>
-          ${prod.categorias ? `<p style="font-size:0.82rem;color:#999;margin-bottom:4px">${prod.categorias.nombre}</p>` : ""}
-          <p>$${precio.toLocaleString("es-CL")}</p>
-          <a href="#" class="btn-primary agregar-carrito"
-             data-producto="${prod.nombre}" data-precio="${precio}">
-            Agregar al carrito
-          </a>`;
-        grilla.appendChild(card);
-      });
+      renderProductos(productosData);
     } catch (err) {
       console.error(err);
       grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">Error al cargar productos. Por favor recarga la página.</div>`;
     }
   }
+
+  // Alias por compatibilidad con código existente
+  function cargarProductos() { inicializar(); }
 
   // ===== MODAL DETALLE PRODUCTO =====
   const modalProducto      = document.getElementById('modalProducto');
@@ -441,47 +450,7 @@ document.addEventListener("DOMContentLoaded", function () {
     this.textContent = expandida ? 'Ver menos' : 'Ver más';
   });
 
-  // Abrir modal al hacer clic en la card (excepto el botón de carrito)
-  let productosData = [];
-  const _cargarProductosOriginal = cargarProductos;
-  cargarProductos = async function() {
-    try {
-      grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">Cargando productos...</div>`;
-      const url = categoriaActiva
-        ? `${API_URL}/productos?categoria=${categoriaActiva}`
-        : `${API_URL}/productos`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error();
-      const productos = await res.json();
-      productosData = productos;
-      grilla.innerHTML = '';
-
-      if (productos.length === 0) {
-        grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">No hay productos en esta categoría.</div>`;
-        return;
-      }
-
-      productos.forEach(prod => {
-        const precio = Number(prod.precio);
-        const imgTag = prod.imagen_url
-          ? `<img src="${prod.imagen_url}" alt="${prod.nombre}" onerror="this.src='https://via.placeholder.com/300x200?text=Sin+imagen'">`
-          : `<div style="height:180px;background:#f0ece8;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:2rem;">🛏</div>`;
-
-        const card = document.createElement("div");
-        card.className = "producto-card";
-        card.dataset.id = String(prod.id);
-        card.style.cursor = 'pointer';
-        card.innerHTML = `
-          ${imgTag}
-          <h3>${prod.nombre}</h3>
-          ${prod.categorias ? `<p style="font-size:0.82rem;color:#999;margin-bottom:4px">${prod.categorias.nombre}</p>` : ""}
-          <button type="button" class="btn-primary btn-ver-producto">Ver producto</button>`;
-        grilla.appendChild(card);
-      });
-    } catch (err) {
-      grilla.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa;">Error al cargar productos.</div>`;
-    }
-  };
+  // productosData se inicializa arriba; se rellena en inicializar()
 
   // Cualquier clic en la card (incluido el botón) abre el modal
   grilla.addEventListener('click', e => {
@@ -491,8 +460,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (prod) abrirModalProducto(prod);
   });
 
-  cargarCategorias();
-  cargarProductos();
+  inicializar();
 
   // ===== TOAST =====
   function mostrarToast(text) {
@@ -572,4 +540,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const mensaje =
       `¡Hola! Me gustaría realizar el siguiente pedido:\n\n` +
       `${lineas}\n\n` +
-      `*Total: $
+      `*Total: $${total.toLocaleString("es-CL")}*\n\n` +
+      `Quedo atento/a a la confirmación. ¡Gracias! 🏡`;
+
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, "_blank");
+  });
+});
+</script>
+<script src="nav-auth.js"></script>
+</body>
+</html>
