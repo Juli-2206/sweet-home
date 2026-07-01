@@ -161,17 +161,23 @@ document.addEventListener("DOMContentLoaded", function () {
   const filtrosBtns = document.getElementById('filtros-btns');
   let categoriaActiva = '';
 
-  // ===== CARGAR CATEGORÍAS =====
+  // ===== CARGAR CATEGORÍAS (solo las que tienen productos) =====
   async function cargarCategorias() {
     try {
-      const res = await fetch(`${API_URL}/categorias`);
-      const cats = await res.json();
-      cats.forEach(cat => {
+      const res = await fetch(`${API_URL}/productos`);
+      const productos = await res.json();
+      const categoriasVistas = new Map();
+      productos.forEach(prod => {
+        if (prod.categorias && !categoriasVistas.has(prod.categorias.id)) {
+          categoriasVistas.set(prod.categorias.id, prod.categorias.nombre);
+        }
+      });
+      categoriasVistas.forEach((nombre, id) => {
         const btn = document.createElement('button');
         btn.className = 'btn-filtro';
-        btn.dataset.id = cat.id;
-        btn.textContent = cat.nombre;
-        btn.addEventListener('click', () => seleccionarFiltro(btn, cat.id));
+        btn.dataset.id = id;
+        btn.textContent = nombre;
+        btn.addEventListener('click', () => seleccionarFiltro(btn, id));
         filtrosBtns.appendChild(btn);
       });
     } catch(err) {
@@ -566,14 +572,4 @@ document.addEventListener("DOMContentLoaded", function () {
     const mensaje =
       `¡Hola! Me gustaría realizar el siguiente pedido:\n\n` +
       `${lineas}\n\n` +
-      `*Total: $${total.toLocaleString("es-CL")}*\n\n` +
-      `Quedo atento/a a la confirmación. ¡Gracias! 🏡`;
-
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, "_blank");
-  });
-});
-</script>
-<script src="nav-auth.js"></script>
-</body>
-</html>
+      `*Total: $
