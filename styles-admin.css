@@ -772,9 +772,13 @@
   grid-template-columns: 1.8fr 100px 80px 36px;
 }
 
+.variantes-header-4 {
+  grid-template-columns: 1.4fr 1.2fr 90px 70px 36px;
+}
+
 .variante-row {
   display: grid;
-  grid-template-columns: 1.8fr 100px 80px 36px;
+  grid-template-columns: 1.4fr 1.2fr 90px 70px 36px;
   gap: 6px;
   padding: 8px 12px;
   border-top: 1px solid #f0e8e3;

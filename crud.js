@@ -7,8 +7,7 @@ try { usuario = JSON.parse(sessionStorage.getItem('sh_usuario')); } catch(e) {}
 let productos     = [];
 let categorias    = [];
 let editId        = null;
-let variantesData = []; // [{id?, talla, precio, stock}]
-let coloresData   = []; // ['Azul', 'Rojo', ...]
+let variantesData = []; // [{id?, talla, color, precio, stock}]
 
 // ===== TOKEN / REFRESH =====
 let refreshToken = null;
@@ -405,9 +404,10 @@ function renderVariantesRows() {
 
   container.innerHTML = variantesData.map((v, i) => `
     <div class="variante-row" data-index="${i}">
-      <input type="text"   class="v-talla"  placeholder="Ej: Queen"  value="${v.talla  || ''}"  data-i="${i}">
-      <input type="number" class="v-precio" placeholder="0"  min="0" value="${v.precio ?? ''}"  data-i="${i}">
-      <input type="number" class="v-stock"  placeholder="0"  min="0" value="${v.stock  ?? 0}"   data-i="${i}">
+      <input type="text"   class="v-talla"  placeholder="Ej: Queen"    value="${v.talla  || ''}"  data-i="${i}">
+      <input type="text"   class="v-color"  placeholder="Ej: Blanco"   value="${v.color  || ''}"  data-i="${i}">
+      <input type="number" class="v-precio" placeholder="0"  min="0"   value="${v.precio ?? ''}"  data-i="${i}">
+      <input type="number" class="v-stock"  placeholder="0"  min="0"   value="${v.stock  ?? 0}"   data-i="${i}">
       <button type="button" class="btn-del-variante" data-i="${i}" title="Eliminar">✕</button>
     </div>
   `).join('');
@@ -415,6 +415,8 @@ function renderVariantesRows() {
   // Sync inputs → variantesData en tiempo real
   container.querySelectorAll('.v-talla').forEach(el =>
     el.addEventListener('input', e => { variantesData[+e.target.dataset.i].talla = e.target.value; }));
+  container.querySelectorAll('.v-color').forEach(el =>
+    el.addEventListener('input', e => { variantesData[+e.target.dataset.i].color = e.target.value; }));
   container.querySelectorAll('.v-precio').forEach(el =>
     el.addEventListener('input', e => { variantesData[+e.target.dataset.i].precio = parseFloat(e.target.value) || 0; }));
   container.querySelectorAll('.v-stock').forEach(el =>
@@ -461,62 +463,7 @@ async function guardarVariantes(productoId) {
   }
 }
 
-// ===== COLORES =====
-function renderColoresChips() {
-  const chips = document.getElementById('coloresChips');
-  if (!chips) return;
-  chips.innerHTML = coloresData.length === 0
-    ? `<span class="colores-vacio">Sin colores agregados</span>`
-    : coloresData.map((c, i) => `
-        <span class="color-chip">
-          ${c}
-          <button type="button" class="chip-del" data-i="${i}" title="Eliminar">×</button>
-        </span>`).join('');
-
-  chips.querySelectorAll('.chip-del').forEach(btn =>
-    btn.addEventListener('click', () => {
-      coloresData.splice(+btn.dataset.i, 1);
-      renderColoresChips();
-    })
-  );
-}
-
-document.getElementById('btnAddColor').addEventListener('click', () => {
-  const input = document.getElementById('nuevoColor');
-  const val   = input.value.trim();
-  if (!val) return;
-  if (!coloresData.includes(val)) {
-    coloresData.push(val);
-    renderColoresChips();
-  }
-  input.value = '';
-  input.focus();
-});
-
-document.getElementById('nuevoColor').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnAddColor').click(); }
-});
-
-async function cargarColores(productoId) {
-  try {
-    const res  = await fetch(`${API_URL}/productos/${productoId}/colores`);
-    const data = await res.json();
-    coloresData = data.map(c => c.color);
-  } catch(err) { coloresData = []; }
-  renderColoresChips();
-}
-
-async function guardarColores(productoId) {
-  const res = await fetch(`${API_URL}/productos/${productoId}/colores`, {
-    method: 'PUT',
-    headers: headers(),
-    body: JSON.stringify({ colores: coloresData.map(c => ({ color: c })) })
-  });
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.error || 'Error al guardar colores');
-  }
-}
+// (Colores ahora son columna de variante — no hay sección separada)
 
 // ===== MODAL =====
 btnAbrirModal.addEventListener("click", () => {
@@ -524,9 +471,7 @@ btnAbrirModal.addEventListener("click", () => {
   form.reset();
   resetUpload();
   variantesData = [];
-  coloresData   = [];
   renderVariantesRows();
-  renderColoresChips();
   modalTitle.textContent  = "Agregar Producto";
   btnGuardar.textContent  = "Guardar producto";
   modalOverlay.classList.add("active");
@@ -542,9 +487,7 @@ function cerrarModal() {
   form.reset();
   resetUpload();
   variantesData = [];
-  coloresData   = [];
   renderVariantesRows();
-  renderColoresChips();
   editId = null;
 }
 
@@ -656,9 +599,7 @@ form.addEventListener("submit", async (e) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error al guardar');
 
-    // Guardar variantes y colores
     await guardarVariantes(data.id);
-    await guardarColores(data.id);
 
     cerrarModal();
     await cargarProductos();
@@ -671,10 +612,9 @@ form.addEventListener("submit", async (e) => {
 });
 
 // ===== REGISTRAR VENTA =====
-let ventaProdId       = null;
-let ventaVariantes    = [];
-let ventaColores      = [];
-let ventaTallaActual  = null;
+let ventaProdId          = null;
+let ventaVariantes       = [];
+let ventaVarianteActual  = null; // {talla, color, precio, stock}
 
 const modalVenta        = document.getElementById('modalVenta');
 const ventaForm         = document.getElementById('ventaForm');
@@ -687,8 +627,8 @@ async function abrirRegistrarVenta(id) {
   const prod = productos.find(p => String(p.id) === String(id));
   if (!prod) return;
 
-  ventaProdId      = prod.id;
-  ventaTallaActual = null;
+  ventaProdId         = prod.id;
+  ventaVarianteActual = null;
 
   document.getElementById('ventaProductoNombre').textContent = prod.nombre;
   document.getElementById('ventaPrecio').value    = prod.precio || '';
@@ -696,57 +636,33 @@ async function abrirRegistrarVenta(id) {
   document.getElementById('ventaNotas').value     = '';
   document.getElementById('ventaError').textContent = '';
 
-  // Cargar variantes
-  const tallaGroup = document.getElementById('ventaTallaGroup');
-  const tallaBtns  = document.getElementById('ventaTallaBtns');
-  tallaGroup.style.display = 'none';
-  tallaBtns.innerHTML = '';
+  const varianteGroup = document.getElementById('ventaVarianteGroup');
+  const varianteBtns  = document.getElementById('ventaVarianteBtns');
+  varianteGroup.style.display = 'none';
+  varianteBtns.innerHTML = '';
 
   try {
     const res = await fetch(`${API_URL}/productos/${prod.id}/variantes`);
     ventaVariantes = await res.json();
     if (ventaVariantes.length > 0) {
-      tallaGroup.style.display = 'block';
-      tallaBtns.innerHTML = ventaVariantes.map((v, i) =>
-        `<button type="button" class="btn-variante-admin" data-i="${i}">
-           ${v.talla} <span style="color:#aaa;font-size:0.75rem;margin-left:4px">$${Number(v.precio).toLocaleString('es-CL')} · Stock: ${v.stock}</span>
-         </button>`
-      ).join('');
+      varianteGroup.style.display = 'block';
+      varianteBtns.innerHTML = ventaVariantes.map((v, i) => {
+        const label = [v.talla, v.color].filter(Boolean).join(' · ');
+        return `<button type="button" class="btn-variante-admin" data-i="${i}">
+          ${label} <span style="color:#aaa;font-size:0.75rem;margin-left:4px">$${Number(v.precio).toLocaleString('es-CL')} · Stock: ${v.stock}</span>
+        </button>`;
+      }).join('');
 
-      tallaBtns.querySelectorAll('.btn-variante-admin').forEach(btn => {
+      varianteBtns.querySelectorAll('.btn-variante-admin').forEach(btn => {
         btn.addEventListener('click', () => {
-          tallaBtns.querySelectorAll('.btn-variante-admin').forEach(b => b.classList.remove('activo'));
+          varianteBtns.querySelectorAll('.btn-variante-admin').forEach(b => b.classList.remove('activo'));
           btn.classList.add('activo');
-          const v = ventaVariantes[+btn.dataset.i];
-          ventaTallaActual = v.talla;
-          document.getElementById('ventaPrecio').value = v.precio;
+          ventaVarianteActual = ventaVariantes[+btn.dataset.i];
+          document.getElementById('ventaPrecio').value = ventaVarianteActual.precio;
         });
       });
     }
   } catch(e) { ventaVariantes = []; }
-
-  // Cargar colores
-  const colorGroup = document.getElementById('ventaColorGroup');
-  const colorBtns  = document.getElementById('ventaColorBtns');
-  colorGroup.style.display = 'none';
-  colorBtns.innerHTML = '';
-
-  try {
-    const res = await fetch(`${API_URL}/productos/${prod.id}/colores`);
-    ventaColores = await res.json();
-    if (ventaColores.length > 0) {
-      colorGroup.style.display = 'block';
-      colorBtns.innerHTML = ventaColores.map((c, i) =>
-        `<button type="button" class="btn-variante-admin" data-color="${c.color}">${c.color}</button>`
-      ).join('');
-      colorBtns.querySelectorAll('.btn-variante-admin').forEach(btn => {
-        btn.addEventListener('click', () => {
-          colorBtns.querySelectorAll('.btn-variante-admin').forEach(b => b.classList.remove('activo'));
-          btn.classList.add('activo');
-        });
-      });
-    }
-  } catch(e) { ventaColores = []; }
 
   modalVenta.classList.add('active');
 }
@@ -756,18 +672,10 @@ ventaForm.addEventListener('submit', async (e) => {
   const errorEl = document.getElementById('ventaError');
   errorEl.textContent = '';
 
-  // Validar talla obligatoria si hay variantes
-  const tallaSeleccionada = ventaTallaActual ||
-    document.querySelector('#ventaTallaBtns .btn-variante-admin.activo')?.dataset
-      ? document.querySelector('#ventaTallaBtns .btn-variante-admin.activo') ? ventaTallaActual : null
-      : null;
-
-  if (ventaVariantes.length > 0 && !ventaTallaActual) {
-    errorEl.textContent = 'Selecciona una talla antes de registrar la venta.';
+  if (ventaVariantes.length > 0 && !ventaVarianteActual) {
+    errorEl.textContent = 'Selecciona una variante antes de registrar la venta.';
     return;
   }
-
-  const colorActivo = document.querySelector('#ventaColorBtns .btn-variante-admin.activo');
 
   const precio   = parseFloat(document.getElementById('ventaPrecio').value);
   const cantidad = parseInt(document.getElementById('ventaCantidad').value, 10) || 1;
@@ -779,8 +687,8 @@ ventaForm.addEventListener('submit', async (e) => {
 
   const payload = {
     producto_id: ventaProdId,
-    talla:       ventaTallaActual || null,
-    color:       colorActivo?.dataset.color || null,
+    talla:       ventaVarianteActual?.talla || null,
+    color:       ventaVarianteActual?.color || null,
     precio,
     cantidad,
     notas:       document.getElementById('ventaNotas').value.trim() || null
@@ -850,9 +758,7 @@ function abrirEditar(id) {
   imagenesData  = urls.map((url, i) => ({ url, titulo: titulos[i] || '' }));
   renderImagenesGrid();
 
-  // Cargar variantes y colores existentes
   cargarVariantes(id);
-  cargarColores(id);
 
   modalOverlay.classList.add("active");
 }
